@@ -1,6 +1,9 @@
 import sys
+import logging
 
 from invoke import task
+
+
 
 if '.' not in sys.path:
     sys.path.append('.')
@@ -45,10 +48,37 @@ def run(ctx, debug=False, host=None):
     }
     if debug:
         env['DEBUG'] = 'true'
+        Log.info("Running webserver in DEBUG mode")
     args = ''
     if host is not None:
         args += ' -h %s' % host
+
     ctx.run("%s -m flask run%s" % (sys.executable, args), env=env)
+
+
+
+@task(
+    help={'debug': 'enable debugging warnings.',
+          'host': 'set interface to bind to. Usage: HOST:PORT',
+          'workers': 'number of workers used'}
+)
+def run_gunicorn(ctx, debug=False, host=None, workers=1):
+    "Run flask application with run."
+
+    app_path = 'salic_api.app.default:app'
+
+    env = {}
+    if debug:
+        env['DEBUG'] = 'true'
+
+    args = ''
+    if host is not None:
+        args += ' --bind %s' % host
+    if workers is not None:
+        args += ' --workers %s' % workers
+
+    ctx.run("gunicorn %s %s" % (args, app_path), env=env)
+
 
 
 @task(

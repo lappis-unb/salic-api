@@ -1,9 +1,32 @@
-server {
-    listen 5000;
-    server_name server_domain_or_IP;
+worker_processes 1;
 
-    location / {
-        include proxy_params;
-        proxy_pass http://unix:/home/sammy/myproject/myproject.sock;
+events {
+
+    worker_connections 1024;
+
+}
+
+http {
+
+    upstream app_servers {
+
+        server 0.0.0.0:5000;
+
+
+    }
+
+    server {
+        listen 5001;
+
+        location / {
+
+            proxy_pass         http://app_servers;
+            proxy_redirect     off;
+            proxy_set_header   Host $host;
+            proxy_set_header   X-Real-IP $remote_addr;
+            proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header   X-Forwarded-Host $server_name;
+
+        }
     }
 }

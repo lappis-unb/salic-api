@@ -28,7 +28,16 @@ RUN inv db -f
 ENV LC_ALL C.UTF-8
 ENV LANG=C.UTF-8
 
+
+COPY entrypoint.sh /
+COPY nginx_salic_config /etc/nginx/nginx.conf
+
+
 # Expose host's port to run the web application
 EXPOSE 5000
+EXPOSE 5001
+
+ENTRYPOINT ["/entrypoint.sh"]
+
 
 CMD ["inv", "run-gunicorn", "-h 0.0.0.0:5000", "-w 4"]

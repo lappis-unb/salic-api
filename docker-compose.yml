@@ -1,0 +1,17 @@
+version: '3'
+services:
+  gunicorn:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile
+
+  nginx:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile_nginx
+
+    ports:
+      - "5001:80"
+    
+    depends_on:
+      - gunicorn

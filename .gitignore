@@ -36,3 +36,4 @@ tests.py
 *.csv
 .vscode
 .idea
+.DS_Store

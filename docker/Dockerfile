@@ -10,11 +10,15 @@ ADD . /app
 RUN apt-get update && apt-get install -y \
     python3 \
     python3-pip \
-    sqlite3 
+    python3-dev \
+    sqlite3 \
+    ufw
+
+# apt-get upgrade iptables
 
 # Install project's dependencies
 RUN python3 setup.py develop
-RUN pip3 install -e .[dev] 
+RUN pip3 install -e .[prod] 
 
 # Create database
 RUN inv db -f
@@ -23,7 +27,6 @@ RUN inv db -f
 ENV LC_ALL C.UTF-8
 ENV LANG=C.UTF-8
 
-# Expose host's port to run the web application
 EXPOSE 5000
 
-CMD ["inv", "run", "-h 0.0.0.0"]
+CMD ["inv", "run-gunicorn", "-h 0.0.0.0:5000", "-w 4"]

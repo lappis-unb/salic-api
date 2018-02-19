@@ -63,11 +63,12 @@ def run(ctx, debug=False, host=None):
           'workers': 'number of workers used'}
 )
 def run_gunicorn(ctx, debug=False, host=None, workers=1):
-    "Run flask application with run."
+    "Run flask application with gunicorn."
 
     app_path = 'salic_api.app.default:app'
 
-    env = {}
+    env = {        
+    }
     if debug:
         env['DEBUG'] = 'true'
 

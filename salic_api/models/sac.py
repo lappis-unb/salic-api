@@ -301,6 +301,7 @@ class PlanilhaAprovacao(PlanilhaAprovacaoBase, Base):  # noqa: N801
     idUnidade = Column(Integer, ForeignKey(foreign_key(PlanilhaUnidadeBase, "idUnidade")))
     qtItem = Column(Integer)
     vlUnitario = Column(Integer)
+    nrOcorrencia = Column(Integer)
 
 
 class Deslocamento(DeslocamentoBase, Base):

@@ -7,6 +7,9 @@ class ItemCusto(ItemCustoBase, Base):
     idItem = Column(Integer, primary_key=True)
     idPlanilhaAprovacao = Column(Integer, ForeignKey(
         foreign_key(PlanilhaAprovacaoBase, 'idPlanilhaAprovacao')))
+    dsItemDeCusto=Column(String)
+    dsMarca=Column(String)
+    dsFabricante=Column(String)
 
 
 class ComprovantePagamentoxPlanilhaAprovacao(ComprovantePagamentoxPlanilhaAprovacaoBase, Base):  # noqa: N801
@@ -15,11 +18,7 @@ class ComprovantePagamentoxPlanilhaAprovacao(ComprovantePagamentoxPlanilhaAprova
         Integer,
         ForeignKey(foreign_key(ComprovantePagamentoBase, 'idComprovantePagamento')))
     vlComprovado=Column(Float)
-    nrOcorrencia=Column(Integer)
     DtEmissao=Column(DateTime)
-    dsItemDeCusto=Column(String)
-    dsMarca=Column(String)
-    dsFabricante=Column(String)
 
 
 class ComprovantePagamento(ComprovantePagamentoBase, Base):  # noqa: N801

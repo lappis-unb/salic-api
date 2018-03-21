@@ -158,9 +158,9 @@ class ProjetoDetail(DetailResource):
         certidoes_negativas = CertidoesNegativasQuery().query(pronac)
         projeto['certidoes_negativas'] = listify_queryset(certidoes_negativas)
 
-        ## Documentos anexados
-        documentos = ProjetoQuery().attached_documents(pronac)
-        projeto['documentos_anexados'] = self.cleaned_documentos(documentos)
+        # ## Documentos anexados
+        # documentos = ProjetoQuery().attached_documents(pronac)
+        # projeto['documentos_anexados'] = self.cleaned_documentos(documentos)
 
         ## Marcas anexadas
         marcas = ProjetoQuery().attached_brands(pronac)

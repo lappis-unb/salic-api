@@ -10,6 +10,8 @@ from .raw_sql import payments_listing_sql, normalize_sql
 from ..query import Query, filter_query, filter_query_like
 from ..serialization import listify_queryset
 from ...models import (
+    ComprovantePagamento as Comprovante, PlanilhaItens, PlanilhaAprovacao,
+    ComprovantePagamentoxPlanilhaAprovacao as ComprovanteAprovacao, ItemCusto,
     Projeto, Interessado, Situacao, Enquadramento, PreProjeto,
     Captacao, CertidoesNegativas, Verificacao, PlanoDistribuicao, Produto, Area,
     Segmento, Custos, Mecanismo, Arquivo, ArquivoImagem, Documento,
@@ -294,32 +296,36 @@ class ProjetoQuery(Query):
 
     def goods_capital_listing(self, idPronac):
         # Relacao de bens de capital
-        query = text(normalize_sql("""
-                SELECT
-                    CASE
-                        WHEN tpDocumento = 1 THEN 'Boleto Bancario'
-                        WHEN tpDocumento = 2 THEN 'Cupom Fiscal'
-                        WHEN tpDocumento = 3 THEN 'Nota Fiscal / Fatura'
-                        WHEN tpDocumento = 4 THEN 'Recibo de Pagamento'
-                        WHEN tpDocumento = 5 THEN 'RPA'
-                    END as Titulo,
-                    b.nrComprovante,
-                    d.Descricao as Item,
-                    b.DtEmissao as dtPagamento,
-                    dsItemDeCusto Especificacao,
-                    dsMarca as Marca,
-                    dsFabricante as Fabricante,
-                    (c.qtItem*nrOcorrencia) as Qtde,
-                    c.vlUnitario,
-                    (c.qtItem*nrOcorrencia*c.vlUnitario) as vlTotal
-                 FROM BDCORPORATIVO.scSAC.tbComprovantePagamentoxPlanilhaAprovacao AS a
-                 INNER JOIN BDCORPORATIVO.scSAC.tbComprovantePagamento AS b ON a.idComprovantePagamento = b.idComprovantePagamento
-                 INNER JOIN SAC.dbo.tbPlanilhaAprovacao AS c ON a.idPlanilhaAprovacao = c.idPlanilhaAprovacao
-                 INNER JOIN SAC.dbo.tbPlanilhaItens AS d ON c.idPlanilhaItem = d.idPlanilhaItens
-                 INNER JOIN BDCORPORATIVO.scSAC.tbItemCusto AS e ON e.idPlanilhaAprovacao = c.idPlanilhaAprovacao
-                 WHERE (c.idPronac = :IdPRONAC)
-                """))
-        return self.fetch(query, {'IdPRONAC': idPronac})
+
+        query_fields = (
+            Comprovante.tpDocumentoLabel.label('Titulo'),
+            Comprovante.nrComprovante.label('numero_comprovante'), # b
+            PlanilhaItens.Descricao.label('Item'), # d
+            Comprovante.dtEmissao.label('dtPagamento'), # b
+            ItemCusto.dsItemDeCusto.label('Especificacao'), # a
+            ItemCusto.dsMarca.label('Marca'), # a
+            ItemCusto.dsFabricante.label('Fabricante'), # a
+            (PlanilhaAprovacao.qtItem * PlanilhaAprovacao.nrOcorrencia).label('Qtde'),
+            PlanilhaAprovacao.vlUnitario.label('valor_unitario'), # c
+            (PlanilhaAprovacao.qtItem * PlanilhaAprovacao.nrOcorrencia * PlanilhaAprovacao.vlUnitario).label('vlTotal'),
+        )
+
+        query = self.raw_query(*query_fields)
+        query = query.select_from(ComprovanteAprovacao)
+        query = (query
+                 .join(Comprovante,
+                       ComprovanteAprovacao.idComprovantePagamento ==
+                       Comprovante.idComprovantePagamento)
+                 .join(PlanilhaAprovacao,
+                       ComprovanteAprovacao.idPlanilhaAprovacao == PlanilhaAprovacao.idPlanilhaAprovacao)
+                 .join(PlanilhaItens,
+                       PlanilhaAprovacao.idPlanilhaItem == PlanilhaItens.idPlanilhaItens)
+                 .join(ItemCusto,
+                       PlanilhaAprovacao.idPlanilhaAprovacao == ItemCusto.idPlanilhaAprovacao)
+                 )
+        query = query.filter(PlanilhaAprovacao.idPronac == idPronac)
+
+        return query
 
 
 class CaptacaoQuery(Query):

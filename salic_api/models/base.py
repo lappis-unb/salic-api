@@ -184,3 +184,7 @@ class PlanilhaAprovacaoBase:  # noqa: N801
 
 class DeslocamentoBase:
     __tablename__ = table_name('SAC.dbo.tbDeslocamento')
+
+
+class UsuariosBase:
+    __tablename__ = table_name('TABELAS.dbo.Usuarios')

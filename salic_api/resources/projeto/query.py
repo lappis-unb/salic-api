@@ -13,7 +13,7 @@ from ...models import (
     Projeto, Interessado, Situacao, Enquadramento, PreProjeto,
     Captacao, CertidoesNegativas, Verificacao, PlanoDistribuicao, Produto, Area,
     Segmento, Custos, Mecanismo, Arquivo, ArquivoImagem, Documento,
-    DocumentoProjeto)
+    DocumentoProjeto, Prorrogacao, Usuarios)
 from ...utils import timer
 
 #
@@ -184,21 +184,26 @@ class ProjetoQuery(Query):
         return self.execute_query(query, {'IdPRONAC': idPronac}).fetchall()
 
     def postpone_request(self, idPronac):  # noqa: N804
-        query = text(normalize_sql("""
-                SELECT a.DtPedido as data_pedido, a.DtInicio as data_inicio, a.DtFinal as data_final, a.Observacao as observacao, a.Atendimento as atendimento,
-                    CASE
-                        WHEN Atendimento = 'A'
-                            THEN 'Em analise'
-                        WHEN Atendimento = 'N'
-                            THEN 'Deferido'
-                        WHEN Atendimento = 'I'
-                            THEN 'Indeferido'
-                        WHEN Atendimento = 'S'
-                            THEN 'Processado'
-                        END as estado
-                    , b.usu_nome AS usuario FROM prorrogacao AS a
-                    LEFT JOIN TABELAS.dbo.Usuarios AS b ON a.Logon = b.usu_codigo WHERE (idPronac = :IdPRONAC)
-            """))
+        query = self.raw_query(
+            Prorrogacao.DtPedido.label("data_pedido"),
+            Prorrogacao.DtInicio.label("data_inicio"),
+            Prorrogacao.DtFinal.label("data_final"),
+            Prorrogacao.Observacao.label("observacao"),
+            Prorrogacao.Atendimento.label("atendimento"),
+            case([
+                (Prorrogacao.Atendimento == 'A', 'Em analise'),
+                (Prorrogacao.Atendimento == 'N', 'Deferido'),
+                (Prorrogacao.Atendimento == 'I', 'Indeferido'),
+                (Prorrogacao.Atendimento == 'S', 'Processado'),
+            ]).label("estado"),
+        )
+        query = (
+            query
+            .select_from(Prorrogacao)
+            .join(Usuarios, Prorrogacao.Logon == Usuarios.usu_codigo)
+            .filter(Prorrogacao.idPronac==idPronac)
+        )
+
         return self.execute_query(query, {'IdPRONAC': idPronac}).fetchall()
 
     def payments_listing(self, limit=None, offset=None, idPronac=None,

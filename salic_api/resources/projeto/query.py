@@ -1,6 +1,6 @@
 import operator
 
-from sqlalchemy import case, func, and_, or_
+from sqlalchemy import case, func, and_, or_, cast, Text
 from sqlalchemy.sql import text
 from sqlalchemy.sql.expression import desc
 from sqlalchemy.sql.functions import coalesce
@@ -15,7 +15,8 @@ from ...models import (
     Projeto, Interessado, Situacao, Enquadramento, PreProjeto,
     Captacao, CertidoesNegativas, Verificacao, PlanoDistribuicao, Produto, Area,
     Segmento, Custos, Mecanismo, Arquivo, ArquivoImagem, Documento,
-    DocumentoProjeto, Prorrogacao, Usuarios)
+    DocumentoProjeto, Prorrogacao, Usuarios, Readequacao, TipoReadequacao,
+    TipoEncaminhamento)
 from ...utils import timer
 
 #
@@ -484,31 +485,44 @@ class ReadequacaoQuery(Query):
 
     """
     def query(self, IdPRONAC):  # noqa: N803
-        stmt = text(normalize_sql("""
-            SELECT
-                a.idReadequacao as id_readequacao,
-                a.dtSolicitacao as data_solicitacao,
-                CAST(a.dsSolicitacao AS TEXT) AS descricao_solicitacao,
-                CAST(a.dsJustificativa AS TEXT) AS descricao_justificativa,
-                a.idSolicitante AS id_solicitante,
-                a.idAvaliador AS id_avaliador,
-                a.dtAvaliador AS data_avaliador,
-                CAST(a.dsAvaliacao AS TEXT) AS descricao_avaliacao,
-                a.idTipoReadequacao AS id_tipo_readequacao,
-                CAST(c.dsReadequacao AS TEXT) AS descricao_readequacao,
-                a.stAtendimento AS st_atendimento,
-                a.siEncaminhamento AS si_encaminhamento,
-                CAST(b.dsEncaminhamento AS TEXT) AS descricao_encaminhamento,
-                a.stEstado AS st_estado,
-                e.idArquivo AS is_arquivo,
-                e.nmArquivo AS nome_arquivo
-             FROM SAC.dbo.tbReadequacao AS a
-             INNER JOIN SAC.dbo.tbTipoEncaminhamento AS b ON a.siEncaminhamento = b.idTipoEncaminhamento INNER JOIN SAC.dbo.tbTipoReadequacao AS c ON c.idTipoReadequacao = a.idTipoReadequacao
-             LEFT JOIN BDCORPORATIVO.scCorp.tbDocumento AS d ON d.idDocumento = a.idDocumento
-             LEFT JOIN BDCORPORATIVO.scCorp.tbArquivo AS e ON e.idArquivo = d.idArquivo WHERE (a.idPronac = :IdPRONAC) AND (a.siEncaminhamento <> 12)
-            """))
-        return self.execute_query(stmt, {'IdPRONAC': IdPRONAC}).fetchall()
+        query = self.raw_query(
+            Readequacao.idReadequacao.label("id_readequacao"),
+            Readequacao.dtSolicitacao.label("data_solicitacao"),
+            cast(Readequacao.dsSolicitacao, Text).label("descricao_solicitacao"),
+            cast(Readequacao.dsJustificativa, Text).label("descricao_justificativa"),
+            Readequacao.idSolicitante.label("id_solicitante"),
+            Readequacao.idAvaliador.label("id_avaliador"),
+            Readequacao.dtAvaliador.label("data_avaliador"),
+            cast(Readequacao.dsAvaliacao, Text).label("descricao_avaliacao"),
+            Readequacao.idTipoReadequacao.label("id_tipo_readequacao"),
+            cast(TipoReadequacao.dsReadequacao, Text).label("descricao_readequacao"),
+            Readequacao.stAtendimento.label("st_atendimento"),
+            Readequacao.siEncaminhamento.label("si_encaminhamento"),
+            cast(TipoEncaminhamento.dsEncaminhamento, Text).label("descricao_encaminhamento"),
+            Readequacao.stEstado.label("st_estado"),
+            Arquivo.idArquivo.label("id_arquivo"),
+            Arquivo.nmArquivo.label("nome_arquivo")
+        )
 
+        query = (
+            query
+            .select_from(Readequacao)
+            .join(TipoEncaminhamento,
+                Readequacao.siEncaminhamento ==
+                TipoEncaminhamento.idTipoEncaminhamento
+            )
+            .join(TipoReadequacao,
+                TipoReadequacao.idTipoReadequacao ==
+                Readequacao.idTipoReadequacao
+            )
+            .outerjoin(Documento,
+                    Documento.idDocumento == Readequacao.idDocumento)
+            .outerjoin(Arquivo, Arquivo.idArquivo == Documento.idArquivo)
+            .filter(Readequacao.IdPRONAC == IdPRONAC)
+            .filter(Readequacao.siEncaminhamento != 12)
+        )
+
+        return query
 
 class AdequacoesPedidoQuery(Query):
     def query(self, IdPRONAC):  # noqa: N803

@@ -9,7 +9,6 @@ class ProponenteDetail(DetailResource):
     resource_path = 'proponentes'
     csv_columns = ['cgccpf', 'nome', 'responsavel', 'tipo_pessoa',
                    'UF', 'total_captado', 'municipio']
-    filter_fields = {}
 
     def hal_links(self, result):
         proponente_id = self.args['proponente_id']

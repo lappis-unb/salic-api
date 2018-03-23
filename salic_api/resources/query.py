@@ -12,6 +12,7 @@ class Query:
 
     session = property(lambda self: self.sql_connector.session)
     labels_to_fields = ()  # Override on child
+    fields_already_filtered = {}
 
     @property
     def query_fields(self):

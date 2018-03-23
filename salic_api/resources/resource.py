@@ -6,6 +6,7 @@ from flask import current_app
 from flask import request
 from flask_cache import Cache
 from flask_restful import Resource
+from sqlalchemy.sql.functions import sum as sql_sum
 
 from .query import filter_query, filter_query_like
 from .serialization import serialize, listify_queryset
@@ -49,6 +50,8 @@ class SalicResource(Resource):
     query_class = None
     csv_columns = None
     request_args = {'format'}
+    filter_likeable_fields = {}
+    transform_args = {}
 
     # Pre-defined error messages
     INTERNAL_ERROR = {
@@ -116,6 +119,54 @@ class SalicResource(Resource):
             'message_code': 11
         }
         return InvalidResult(results, 404)
+
+    def filter_query(self, query):
+        """
+        Filter query according to the filtering arguments.
+        """
+        self.transform_args_values()
+        built_args = self.build_query_args()
+        query_fields = self.query_class.labels_to_fields
+
+        def validate_fields(fields_in):
+            """
+            Take the intersection between the fields requested and the
+            query_fields. Do not keep the fields that already have a more
+            complex filter on query.
+            Eg. {name, email, etc} & {name} -> {name}
+            """
+
+            return (query_fields.keys() & set(fields_in)) - set(self.query_class.fields_already_filtered)
+
+        def map_to_column(filter_args):
+            """
+            Map each filter with a Column name and args value to the query
+            Remove from the filter the columns that are a sum
+            """
+            return {query_fields[field]: built_args[field] for field in
+                filter_args if type(query_fields[field]) is not sql_sum}
+
+        filter_args = map_to_column(
+            validate_fields(built_args.keys() - self.filter_likeable_fields)
+        )
+
+        filter_args_like = map_to_column(
+            validate_fields(built_args.keys() & self.filter_likeable_fields)
+        )
+
+        query = filter_query(query, filter_args)
+        query = filter_query_like(query, filter_args_like)
+
+        return query
+
+    def transform_args_values(self):
+        """
+        Transform args values from human readable to db values
+        Eg. tipo_pessoa=fisica -> tipo_pessoa=1
+        """
+        for key in self.args.keys():
+            if key in self.transform_args.keys():
+                self.args[key] = self.transform_args[key][self.args[key]]
 
     #
     # HAL links
@@ -244,9 +295,6 @@ class SalicResource(Resource):
         for arg in unwanted_args:
             args.pop(arg, None)
 
-        for field in self.filter_fields:
-            args.pop(field, None)
-
         return args
 
     def _csv_response(self, data, headers={}, status_code=200, raw=False):
@@ -371,9 +419,6 @@ class ListResource(SalicResource):
     detail_pk = None
     default_sort_field = None
     request_args = {'format', 'limit', 'offset', 'sort', 'order'}
-    filter_fields = {}
-    filter_likeable_fields = {}
-    transform_args = {}
 
     @property
     def _embedding_field(self):
@@ -470,43 +515,6 @@ class ListResource(SalicResource):
         limited_query = query.limit(self.limit).offset(self.offset)
         return listify_queryset(limited_query)
 
-    def transform_args_values(self):
-        """
-        Transform args values from human readable to db values
-        Eg. tipo_pessoa=fisica -> tipo_pessoa=1
-        """
-        for key in self.args.keys():
-            if key in self.transform_args.keys():
-                self.args[key] = self.transform_args[key][self.args[key]]
-
-    def filter_query(self, query):
-        """
-        Filter query according to the filtering arguments.
-        """
-        self.transform_args_values()
-
-        def validate_fields(fields):
-            """
-            Take the intersection between the key args and the fields
-            Eg. {name, email, etc} & {name} -> {name}
-            """
-            return set(fields) & self.args.keys()
-
-        def map_to_column(filter_args):
-            """
-            Map each filter with a Column name and args value to the query
-            """
-            query_fields = self.query_class().labels_to_fields
-            return {query_fields[field]: self.args[field] for field in filter_args}
-
-        filter_args = map_to_column(validate_fields(self.filter_fields))
-        filter_args_like = map_to_column(validate_fields(self.filter_likeable_fields))
-
-        query = filter_query_like(query, filter_args_like)
-        query = filter_query(query, filter_args)
-
-        return query
-
     def sort_query(self, query):
         """
         Sort query according to sorting arguments.
@@ -574,7 +582,6 @@ class DetailResource(SalicResource):
     """
     Base class for all end points that return dictionaries.
     """
-    filter_fields = {}
     strip_html_fields = {}
 
     def apply_hal_data(self, result):
@@ -607,7 +614,8 @@ class DetailResource(SalicResource):
         return {}
 
     def query_db(self):
-        query = super().query_db().limit(1)
+        query = super().query_db()
+        query = self.filter_query(query).limit(1)
         query = listify_queryset(query)
         if len(query) == 1:
             obj, = query

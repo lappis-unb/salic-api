@@ -16,11 +16,6 @@ class ProjetoList(ListResource):
         'valor_aprovado', 'valor_projeto',
     }
     default_sort_field = 'ano_projeto'
-    filter_fields = {
-        'PRONAC', 'area', 'segmento', 'UF', 'municipio', 'ano_projeto',
-        'data_inicio', 'data_inicio_min', 'data_inicio_max', 'data_termino',
-        'data_termino_min', 'data_termino_max',
-    }
     filter_likeable_fields = {
         'proponente',
         'cgccpf',

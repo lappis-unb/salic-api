@@ -17,10 +17,6 @@ class ProponenteList(ListResource):
         'tipo_pessoa'
     }
 
-    filter_fields = {
-        'municipio', 'UF', 'tipo_pessoa'
-    }
-
     filter_likeable_fields = {
         'nome', 'cgccpf'
     }

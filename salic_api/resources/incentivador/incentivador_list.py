@@ -13,10 +13,6 @@ class IncentivadorList(ListResource):
     sort_fields = {'cgccpf', 'nome', 'total_doado'}
     default_sort_field = 'cgccpf'
 
-    filter_fields = {
-       'UF', 'tipo_pessoa',
-    }
-
     filter_likeable_fields = {
         'nome', 'municipio', 'cgccpf',
     }

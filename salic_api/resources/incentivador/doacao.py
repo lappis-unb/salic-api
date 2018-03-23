@@ -33,7 +33,6 @@ class DoacaoList(ListResource):
     request_args = {'incentivador_id', 'limit', 'offset', 'format'}
     sort_fields = {'data_recibo', 'valor'}
     default_sort_field = 'valor'
-    filter_fields = {'cgccpf'}
     filter_likeable_fields = {'nome_doador'}
 
     def build_query_args(self):

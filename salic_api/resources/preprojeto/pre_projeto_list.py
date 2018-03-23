@@ -18,9 +18,4 @@ class PreProjetoList(ListResource):
         'data_arquivamento',
     }
     default_sort_field = 'id'
-    filter_fields = {
-        'id',
-        'data_inicio',
-        'data_termino'
-    }
     filter_likeable_fields = {'nome'}

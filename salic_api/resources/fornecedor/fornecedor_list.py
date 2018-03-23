@@ -18,9 +18,6 @@ class FornecedorList(ListResource):
     sort_fields = {
         'cgccpf', 'nome'
     }
-    filter_fields = {
-        'email',
-    }
     filter_likeable_fields = {
         'cgccpf', 'nome'
     }

@@ -81,7 +81,7 @@ class ProjetoQuery(Query):
         'providencia': Projeto.ProvidenciaTomada,
         'PRONAC': Projeto.PRONAC,
         'UF': Projeto.UfProjeto,
-        'data_incio': Projeto.data_inicio_execucao,
+        'data_inicio': Projeto.data_inicio_execucao,
         'data_termino': Projeto.data_fim_execucao,
         'IdPRONAC': Projeto.IdPRONAC,
         'ano_projeto': Projeto.AnoProjeto,
@@ -120,6 +120,7 @@ class ProjetoQuery(Query):
         #'valor_projeto': valor_projeto, #permission denied
     }
 
+    fields_already_filtered = {'data_inicio','data_termino'}
     #
     # Queries
     #
@@ -148,7 +149,7 @@ class ProjetoQuery(Query):
                         Custos.IdPRONAC == Projeto.IdPRONAC)
 
             # # Filter query by dates
-            end_of_day = (lambda x: None if x is None else x + '23:59:59')
+            end_of_day = (lambda x: None if x is None else x + ' 23:59:59')
             query = filter_query(query, {
                 Projeto.data_inicio_execucao: data_inicio or data_inicio_min,
                 Projeto.data_fim_execucao: data_termino or data_termino_min,

@@ -12,6 +12,7 @@ from ..serialization import listify_queryset
 from ...models import (
     ComprovantePagamento as Comprovante, PlanilhaItens, PlanilhaAprovacao,
     ComprovantePagamentoxPlanilhaAprovacao as ComprovanteAprovacao, ItemCusto,
+    PlanilhaEtapa, PlanilhaUnidade,
     Projeto, Interessado, Situacao, Enquadramento, PreProjeto,
     Captacao, CertidoesNegativas, Verificacao, PlanoDistribuicao, Produto, Area,
     Segmento, Custos, Mecanismo, Arquivo, ArquivoImagem, Documento,
@@ -260,55 +261,74 @@ class ProjetoQuery(Query):
 
     def taxing_report(self, idPronac):  # noqa: N803
         # Relatório fisco
-        query = text(normalize_sql("""
-                SELECT
-                    f.idPlanilhaEtapa as id_planilha_etapa,
-                    f.Descricao AS etapa,
-                    d.Descricao AS item,
-                    g.Descricao AS unidade,
-                    (c.qtItem*nrOcorrencia) AS qtd_programada,
-                    (c.qtItem*nrOcorrencia*c.vlUnitario) AS valor_programado,
 
-                        CASE c.qtItem*nrOcorrencia*c.vlUnitario
-                            WHEN 0 then NULL
-                            ELSE ROUND(sum(b.vlComprovacao) / (c.qtItem*nrOcorrencia*c.vlUnitario) * 100, 2)
-                        END AS perc_executado,
+        qtd_programada = PlanilhaAprovacao.qtItem * PlanilhaAprovacao.nrOcorrencia
+        valor_programado = PlanilhaAprovacao.qtItem * PlanilhaAprovacao.nrOcorrencia * PlanilhaAprovacao.vlUnitario
 
-                        CASE c.qtItem*nrOcorrencia*c.vlUnitario
-                            WHEN 0 then NULL
-                            ELSE ROUND(100 - (sum(b.vlComprovacao) / (c.qtItem*nrOcorrencia*c.vlUnitario) * 100), 2)
-                        END AS perc_a_executar,
+        query_fields = (
+            PlanilhaEtapa.idPlanilhaEtapa.label('id_planilha_etapa'),
+            PlanilhaEtapa.Descricao.label('etapa'),
+            PlanilhaItens.Descricao.label('item'),
+            PlanilhaUnidade.Descricao.label('unidade'),
+            qtd_programada.label('qtd_programada'),
+            valor_programado.label('valor_programado'),
 
-                    (sum(b.vlComprovacao)) AS valor_executado
-                FROM BDCORPORATIVO.scSAC.tbComprovantePagamentoxPlanilhaAprovacao AS a
-                INNER JOIN BDCORPORATIVO.scSAC.tbComprovantePagamento AS b ON a.idComprovantePagamento = b.idComprovantePagamento
-                INNER JOIN SAC.dbo.tbPlanilhaAprovacao AS c ON a.idPlanilhaAprovacao = c.idPlanilhaAprovacao
-                INNER JOIN SAC.dbo.tbPlanilhaItens AS d ON c.idPlanilhaItem = d.idPlanilhaItens
-                INNER JOIN SAC.dbo.tbPlanilhaEtapa AS f ON c.idEtapa = f.idPlanilhaEtapa
-                INNER JOIN SAC.dbo.tbPlanilhaUnidade AS g ON c.idUnidade= g.idUnidade WHERE (c.idPronac = :IdPRONAC) GROUP BY c.idPronac,
-                    f.Descricao,
-                    d.Descricao,
-                    g.Descricao,
-                    c.qtItem,
-                    nrOcorrencia,
-                    c.vlUnitario,
-                    f.idPlanilhaEtapa
-                """))
-        return self.execute_query(query, {'IdPRONAC': idPronac}).fetchall()
+            case([(valor_programado == 0, 'NULL')],
+                else_ = func.round(func.sum(Comprovante.vlComprovacao) / valor_programado * 100, 2)
+            ).label('perc_executado'),
+
+            case([(valor_programado == 0, 'NULL')],
+                else_ = func.round(100 - (func.sum(Comprovante.vlComprovacao) / valor_programado * 100), 2)
+            ).label('perc_a_executar'),
+
+            func.sum(Comprovante.vlComprovacao).label('valor_executado')
+        )
+
+        query = self.raw_query(*query_fields)
+        query = query.select_from(ComprovanteAprovacao)
+
+        query = (query
+                 .join(Comprovante,
+                       ComprovanteAprovacao.idComprovantePagamento ==
+                       Comprovante.idComprovantePagamento)
+                 .join(PlanilhaAprovacao,
+                       ComprovanteAprovacao.idPlanilhaAprovacao == PlanilhaAprovacao.idPlanilhaAprovacao)
+                 .join(PlanilhaItens,
+                       PlanilhaAprovacao.idPlanilhaItem == PlanilhaItens.idPlanilhaItens)
+                 .join(PlanilhaEtapa,
+                       PlanilhaAprovacao.idEtapa == PlanilhaEtapa.idPlanilhaEtapa)
+                 .join(PlanilhaUnidade,
+                       PlanilhaAprovacao.idUnidade == PlanilhaUnidade.idUnidade)
+                 )
+
+        query = query.filter(PlanilhaAprovacao.idPronac == idPronac)
+
+        query = query.group_by(
+            PlanilhaAprovacao.idPronac,
+            PlanilhaEtapa.Descricao,
+            PlanilhaItens.Descricao,
+            PlanilhaUnidade.Descricao,
+            PlanilhaAprovacao.qtItem,
+            PlanilhaAprovacao.nrOcorrencia,
+            PlanilhaAprovacao.vlUnitario,
+            PlanilhaEtapa.idPlanilhaEtapa,
+        )
+
+        return query
 
     def goods_capital_listing(self, idPronac):
         # Relacao de bens de capital
 
         query_fields = (
             Comprovante.tpDocumentoLabel.label('Titulo'),
-            Comprovante.nrComprovante.label('numero_comprovante'), # b
-            PlanilhaItens.Descricao.label('Item'), # d
-            Comprovante.dtEmissao.label('dtPagamento'), # b
-            ItemCusto.dsItemDeCusto.label('Especificacao'), # a
-            ItemCusto.dsMarca.label('Marca'), # a
-            ItemCusto.dsFabricante.label('Fabricante'), # a
+            Comprovante.nrComprovante.label('numero_comprovante'),
+            PlanilhaItens.Descricao.label('Item'),
+            Comprovante.dtEmissao.label('dtPagamento'),
+            ItemCusto.dsItemDeCusto.label('Especificacao'),
+            ItemCusto.dsMarca.label('Marca'),
+            ItemCusto.dsFabricante.label('Fabricante'),
             (PlanilhaAprovacao.qtItem * PlanilhaAprovacao.nrOcorrencia).label('Qtde'),
-            PlanilhaAprovacao.vlUnitario.label('valor_unitario'), # c
+            PlanilhaAprovacao.vlUnitario.label('valor_unitario'),
             (PlanilhaAprovacao.qtItem * PlanilhaAprovacao.nrOcorrencia * PlanilhaAprovacao.vlUnitario).label('vlTotal'),
         )
 

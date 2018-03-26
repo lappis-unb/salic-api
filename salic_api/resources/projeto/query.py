@@ -2,7 +2,7 @@ import operator
 
 from sqlalchemy import case, func, and_, or_, cast, Text
 from sqlalchemy.sql import text
-from sqlalchemy.sql.expression import desc
+from sqlalchemy.sql.expression import desc, alias
 from sqlalchemy.sql.functions import coalesce
 
 from salic_api.models import PlanoDivulgacao
@@ -17,7 +17,7 @@ from ...models import (
     Captacao, CertidoesNegativas, Verificacao, PlanoDistribuicao, Produto, Area,
     Segmento, Custos, Mecanismo, Arquivo, ArquivoImagem, Documento,
     DocumentoProjeto, Prorrogacao, Usuarios, Readequacao, TipoReadequacao,
-    TipoEncaminhamento)
+    TipoEncaminhamento, Pais, Municipios, UF, Deslocamento)
 from ...utils import timer
 
 #
@@ -443,30 +443,43 @@ class DeslocamentoQuery(Query):
     Returns descriptions of places which the project may pass.
     """
     def query(self, IdPRONAC):  # noqa: N803
-        stmt = text(normalize_sql("""
-            SELECT
-                d.idDeslocamento,
-                d.idProjeto,
-                p.Descricao as PaisOrigem,
-                u.Descricao as UFOrigem,
-                m.Descricao as MunicipioOrigem,
-                p2.Descricao as PaisDestino,
-                u2.Descricao as UFDestino,
-                m2.Descricao as MunicipioDestino,
-                d.Qtde
+        pais_origem = alias(Pais,name='pais_origem')
+        pais_destino = alias(Pais,name='pais_destino')
+        uf_origem = alias(UF,name='uf_origem')
+        uf_destino = alias(UF,name='uf_destino')
+        municipio_origem = alias(Municipios,name='municipios_origem')
+        municipio_destino = alias(Municipios,name='municipios_destino')
 
-            FROM
-                Sac.dbo.tbDeslocamento as d
-                INNER JOIN Sac.dbo.Projetos y on (d.idProjeto = y.idProjeto)
-                INNER JOIN Agentes.dbo.Pais p on (d.idPaisOrigem = p.idPais)
-                INNER JOIN Agentes.dbo.uf u on (d.idUFOrigem = u.iduf)
-                INNER JOIN Agentes.dbo.Municipios m on (d.idMunicipioOrigem = m.idMunicipioIBGE)
-                INNER JOIN Agentes.dbo.Pais p2 on (d.idPaisDestino = p2.idPais)
-                INNER JOIN Agentes.dbo.uf u2 on (d.idUFDestino = u2.iduf)
-                INNER JOIN Agentes.dbo.Municipios m2 on (d.idMunicipioDestino = m2.idMunicipioIBGE)
-                WHERE y.idPRONAC = :IdPRONAC
-            """))
-        return self.execute_query(stmt, {'IdPRONAC': IdPRONAC}).fetchall()
+        query = self.raw_query(
+            Deslocamento.idDeslocamento.label("id_deslocamento"),
+            Deslocamento.idProjeto.label("id_projeto"),
+            pais_origem.c.Descricao.label("PaisOrigem"),
+            pais_destino.c.Descricao.label("PaisDestino"),
+            uf_origem.c.Descricao.label("UFOrigem"),
+            uf_destino.c.Descricao.label("UFDestino"),
+            municipio_origem.c.Descricao.label("MunicipioOrigem"),
+            municipio_destino.c.Descricao.label("MunicipioDestino"),
+            Deslocamento.Qtde.label("Qtde"),
+        )
+
+        query = (
+            query
+            .select_from(Deslocamento)
+            .join(Projeto, Projeto.idProjeto==Deslocamento.idProjeto)
+
+            .join(pais_origem, pais_origem.c.idPais==Deslocamento.idPaisOrigem)
+            .join(pais_destino, pais_destino.c.idPais==Deslocamento.idPaisDestino)
+
+            .join(uf_origem, uf_origem.c.iduf==Deslocamento.idUFOrigem)
+            .join(uf_destino, uf_destino.c.iduf==Deslocamento.idUFDestino)
+
+            .join(municipio_origem, municipio_origem.c.idMunicipioIBGE==Deslocamento.idMunicipioOrigem)
+            .join(municipio_destino, municipio_destino.c.idMunicipioIBGE==Deslocamento.idMunicipioDestino)
+
+            .filter(Projeto.IdPRONAC == IdPRONAC)
+        )
+
+        return self.execute_query(query, {'IdPRONAC': IdPRONAC}).fetchall()
 
 
 class DistribuicaoQuery(Query):

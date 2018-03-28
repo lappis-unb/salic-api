@@ -1,10 +1,11 @@
+from os import environ as env
 from sqlalchemy import func
 
 from ..projeto.query import custo_projeto
 from ..query import Query, filter_query, filter_query_like
 from ...models import Interessado, Projeto, Custos
 
-use_sql_procedures = False
+use_sql_procedures = False if env.get('SQL_DRIVER', 'sqlite') == 'sqlite' else True
 
 
 class ProponenteQuery(Query):

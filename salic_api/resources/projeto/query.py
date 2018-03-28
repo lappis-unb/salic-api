@@ -1,5 +1,6 @@
 import operator
 
+from os import environ as env
 from sqlalchemy import case, func, and_, or_, cast, Text
 from sqlalchemy.sql import text
 from sqlalchemy.sql.expression import desc, alias
@@ -23,8 +24,8 @@ from ...utils import timer
 #
 # SQL procedures
 #
-use_sql_procedures = True
-
+use_sql_procedures = False if env.get('SQL_DRIVER', 'sqlite') == 'sqlite' else True
+use_sql_procedures = False
 
 def dummy(field, id_projeto, *args):
     return getattr(Custos, field)
@@ -34,6 +35,7 @@ ano_projeto = Projeto.AnoProjeto
 sequencial = Projeto.Sequencial
 id_projeto = Projeto.idProjeto
 procs = func.sac.dbo
+
 
 # Valores da proposta
 if use_sql_procedures:
@@ -113,12 +115,12 @@ class ProjetoQuery(Query):
 
         ## Derived info
         'enquadramento': Enquadramento.enquadramento,
-        #'valor_solicitado': valor_solicitado, #permission denied
-        #'outras_fontes': outras_fontes, #permission denied
+        'valor_solicitado': valor_solicitado, #permission denied
+        'outras_fontes': outras_fontes, #permission denied
         'valor_captado': custo_projeto,
-        #'valor_proposta': valor_proposta, #permission denied
-        #'valor_aprovado': valor_aprovado, #permission denied
-        #'valor_projeto': valor_projeto, #permission denied
+        'valor_proposta': valor_proposta, #permission denied
+        'valor_aprovado': valor_aprovado, #permission denied
+        'valor_projeto': valor_projeto, #permission denied
     }
 
     fields_already_filtered = {'data_inicio','data_termino'}
@@ -497,12 +499,12 @@ class DistribuicaoQuery(Query):
                 PlanoDistribuicao.QtdeOutros.label('QtdeOutros'),
                 PlanoDistribuicao.QtdeProponente.label('QtdeProponente'),
                 PlanoDistribuicao.QtdeProduzida.label('QtdeProduzida'),
-                PlanoDistribuicao.QtdePatrocinador.label('qtdePatrocinador'),
+                PlanoDistribuicao.QtdePatrocinador.label('QtdePatrocinador'),
                 Area.Descricao.label('area'),
                 Segmento.Descricao.label('segmento'),
                 Produto.Descricao.label('produto'),
                 Verificacao.Descricao.label('posicao_logo'),
-                Projeto.Localizacao.label('localizacao'),
+                Projeto.Localizacao.label('Localizacao'),
             )
             .join(Projeto)
             .join(Produto)

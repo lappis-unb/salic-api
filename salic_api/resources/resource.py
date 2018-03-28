@@ -136,7 +136,7 @@ class SalicResource(Resource):
             Eg. {name, email, etc} & {name} -> {name}
             """
 
-            return (query_fields.keys() & set(fields_in)) - set(self.query_class.fields_already_filtered)
+            return (set(query_fields) & set(fields_in)) - set(self.query_class.fields_already_filtered)
 
         def map_to_column(filter_args):
             """

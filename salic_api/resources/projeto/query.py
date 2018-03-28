@@ -1,5 +1,6 @@
 import operator
 
+from os import environ as env
 from sqlalchemy import case, func, and_, or_, cast, Text
 from sqlalchemy.sql import text
 from sqlalchemy.sql.expression import desc, alias
@@ -23,8 +24,7 @@ from ...utils import timer
 #
 # SQL procedures
 #
-use_sql_procedures = True
-
+use_sqlite = True if env.get('SQL_DRIVER', 'sqlite') == 'sqlite' else False
 
 def dummy(field, id_projeto, *args):
     return getattr(Custos, field)
@@ -35,8 +35,9 @@ sequencial = Projeto.Sequencial
 id_projeto = Projeto.idProjeto
 procs = func.sac.dbo
 
+
 # Valores da proposta
-if use_sql_procedures:
+if not use_sqlite:
     valor_proposta_base = procs.fnValorDaProposta(id_projeto)
     valor_solicitado = procs.fnValorSolicitado(id_projeto, sequencial)
     valor_aprovado = procs.fnValorAprovado(id_projeto, sequencial)
@@ -113,12 +114,13 @@ class ProjetoQuery(Query):
 
         ## Derived info
         'enquadramento': Enquadramento.enquadramento,
-        #'valor_solicitado': valor_solicitado, #permission denied
-        #'outras_fontes': outras_fontes, #permission denied
+        'valor_solicitado': valor_solicitado, #permission denied
+        'outras_fontes': outras_fontes, #permission denied
         'valor_captado': custo_projeto,
-        #'valor_proposta': valor_proposta, #permission denied
-        #'valor_aprovado': valor_aprovado, #permission denied
-        #'valor_projeto': valor_projeto, #permission denied
+        'valor_proposta': valor_proposta, #permission denied
+        'valor_aprovado': valor_aprovado, #permission denied
+        'valor_projeto': valor_projeto, #permission denied
+        # TODO When fix uncomment tests/examples.py lines 196, 203, 205, 206 and 207
     }
 
     fields_already_filtered = {'data_inicio','data_termino'}
@@ -145,7 +147,7 @@ class ProjetoQuery(Query):
                 )
 
             # For sqlite use
-            if not use_sql_procedures:
+            if use_sqlite:
                 query = query.join(Custos,
                         Custos.IdPRONAC == Projeto.IdPRONAC)
 
@@ -167,7 +169,7 @@ class ProjetoQuery(Query):
 
    #  FIXME: using SQL procedure SAC.dbo.paDocumentos #permission denied
     def attached_documents(self, pronac_id):
-        if use_sql_procedures:
+        if not use_sqlite:
             query = text('SAC.dbo.paDocumentos :idPronac')
             return self.execute_query(query, {'idPronac': pronac_id}).fetchall()
         else:
@@ -195,6 +197,7 @@ class ProjetoQuery(Query):
             Prorrogacao.DtFinal.label("data_final"),
             Prorrogacao.Observacao.label("observacao"),
             Prorrogacao.Atendimento.label("atendimento"),
+            Usuarios.usu_nome.label("usuario"),
             case([
                 (Prorrogacao.Atendimento == 'A', 'Em analise'),
                 (Prorrogacao.Atendimento == 'N', 'Deferido'),
@@ -329,7 +332,7 @@ class ProjetoQuery(Query):
             ItemCusto.dsFabricante.label('Fabricante'),
             (PlanilhaAprovacao.qtItem * PlanilhaAprovacao.nrOcorrencia).label('Qtde'),
             PlanilhaAprovacao.vlUnitario.label('valor_unitario'),
-            (PlanilhaAprovacao.qtItem * PlanilhaAprovacao.nrOcorrencia * PlanilhaAprovacao.vlUnitario).label('vlTotal'),
+            (PlanilhaAprovacao.qtItem * PlanilhaAprovacao.nrOcorrencia * PlanilhaAprovacao.vlUnitario).label('valor_total'),
         )
 
         query = self.raw_query(*query_fields)
@@ -497,12 +500,12 @@ class DistribuicaoQuery(Query):
                 PlanoDistribuicao.QtdeOutros.label('QtdeOutros'),
                 PlanoDistribuicao.QtdeProponente.label('QtdeProponente'),
                 PlanoDistribuicao.QtdeProduzida.label('QtdeProduzida'),
-                PlanoDistribuicao.QtdePatrocinador.label('qtdePatrocinador'),
+                PlanoDistribuicao.QtdePatrocinador.label('QtdePatrocinador'),
                 Area.Descricao.label('area'),
                 Segmento.Descricao.label('segmento'),
                 Produto.Descricao.label('produto'),
                 Verificacao.Descricao.label('posicao_logo'),
-                Projeto.Localizacao.label('localizacao'),
+                Projeto.Localizacao.label('Localizacao'),
             )
             .join(Projeto)
             .join(Produto)

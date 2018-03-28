@@ -26,9 +26,9 @@ PROJETO_RESPONSE = {
         'relacao_bens_captal': [
             {
                 "Titulo": "Boleto Bancario",
-                "vlTotal": 4665.1275000000005,
-                "vlUnitario": 3.1415,
-                "nrComprovante": "1",
+                "valor_total": 4665.1275000000005,
+                "valor_unitario": 3.1415,
+                "numero_comprovante": "1",
                 "Marca": "Descricao marca",
                 "Especificacao": "Descricao item",
                 "Fabricante": "Descricao fabricante",
@@ -113,7 +113,7 @@ PROJETO_RESPONSE = {
                 'id_readequacao': 1,
                 'id_solicitante': 1,
                 'id_tipo_readequacao': 1,
-                'is_arquivo': 1,
+                'id_arquivo': 1,
                 'nome_arquivo': '1',
                 'si_encaminhamento': 1,
                 'st_atendimento': 'Atendido',

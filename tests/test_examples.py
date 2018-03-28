@@ -97,7 +97,8 @@ class TestEndpointsIsolated:
         factories = [ex.tbcomprovantepagamento_example, ex.agentes_example,
                      ex.tbplanilhaaprovacao_example, ex.nomes_example,
                      ex.tbPlanilhaItens_example, ex.internet_example,
-                     ex.tbcomprovantepagamentoxplanilhaaprovacao_example]
+                     ex.tbcomprovantepagamentoxplanilhaaprovacao_example,
+                     ex.tbarquivo_example, ex.projeto_example, ex.pre_projeto_example]
 
         with examples(factories):
             url = '/v1/fornecedores/30313233343536373839616263646566e0797636'

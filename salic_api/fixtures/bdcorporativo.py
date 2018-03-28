@@ -8,11 +8,7 @@ def tbcomprovantepagamentoxplanilhaaprovacao_example(size=1):
     return [ComprovantePagamentoxPlanilhaAprovacao(
         idPlanilhaAprovacao=i,
         idComprovantePagamento=i,
-        nrOcorrencia=15,
         DtEmissao=datetime(2000, 1, 1),
-        dsItemDeCusto='Descricao item',
-        dsMarca='Descricao marca',
-        dsFabricante='Descricao fabricante',
         vlComprovado=2000.0,)
         for i in range(1, size + 1)
     ]
@@ -65,6 +61,9 @@ def documento_projeto_example(size=1):
 def tbItemCusto_example(size=1):
     return [ItemCusto(
         idItem=i,
+        dsMarca='Descricao marca',
+        dsFabricante='Descricao fabricante',
+        dsItemDeCusto='Descricao item',
         idPlanilhaAprovacao=i)
         for i in range(1, size + 1)
     ]

@@ -10,13 +10,13 @@ SALIC_SCHEMAS = {
     'TABELAS.dbo',
 }
 
-USE_SQLITE = True if env.get('SQL_DRIVER', 'sqlite') == 'sqlite' else False
+use_sqlite = True if env.get('SQL_DRIVER', 'sqlite') == 'sqlite' else False
 
 def normalize_sql(sql):
     """
     Normalize raw sql before sending it to the database.
     """
-    if USE_SQLITE:
+    if use_sqlite:
         return clean_sql_fields(sql)
     return sql
 
@@ -109,7 +109,7 @@ SELECT
     ORDER BY data_pagamento{tail};
 """
 
-if USE_SQLITE:
+if use_sqlite:
     PAGINATION_SQL = (
         '\n    LIMIT :limit OFFSET :offset'
     )

@@ -2,7 +2,7 @@ from salic_api.resources.format_utils import sanitize
 from . import utils
 from .query import (
     ProjetoQuery, CertidoesNegativasQuery, DivulgacaoQuery, DeslocamentoQuery,
-    DistribuicaoQuery, ReadequacaoQuery, CaptacaoQuery
+    DistribuicaoQuery, ReadequacaoQuery, CaptacaoQuery, use_sqlite
 )
 from ..format_utils import cgccpf_mask
 from ..resource import DetailResource, InvalidResult
@@ -93,14 +93,6 @@ class ProjetoDetail(DetailResource):
         return {field: data.pop(field) for field in fields
                                        if field in data.keys()}
 
-    def hal_embedded_links(self, data):
-        return {
-            'captacoes':
-                self.links_captacoes(data['captacoes'], self.pronac),
-             'relacao_pagamentos':
-                 self.links_produtos(data['relacao_pagamentos'], self.pronac),
-        }
-
     def links_captacoes(self, captacoes, pronac):
         links = []
         for captacao in captacoes:
@@ -158,9 +150,9 @@ class ProjetoDetail(DetailResource):
         certidoes_negativas = CertidoesNegativasQuery().query(pronac)
         projeto['certidoes_negativas'] = listify_queryset(certidoes_negativas)
 
-        # ## Documentos anexados
-        # documentos = ProjetoQuery().attached_documents(pronac)
-        # projeto['documentos_anexados'] = self.cleaned_documentos(documentos)
+        if use_sqlite: # ## Documentos anexados #TODO ERRO: Permission Denied (Uncomment tests/examples.py line 123
+            documentos = ProjetoQuery().attached_documents(pronac)
+            projeto['documentos_anexados'] = self.cleaned_documentos(documentos)
 
         ## Marcas anexadas
         marcas = ProjetoQuery().attached_brands(pronac)

@@ -92,7 +92,7 @@ class ProductQuery(Query):
         'nome_fornecedor': Nomes.Descricao,
         'data_aprovacao': Comprovante.DtPagamento,
         'PRONAC': Projeto.AnoProjeto + Projeto.Sequencial,
-        'tipo_documento': Comprovante.tpDocumentoLabel,
+        'tipo_documento': Comprovante.tpDocumento,
         'nr_comprovante': Comprovante.nrComprovante,
         'data_pagamento': Comprovante.dtEmissao,
         'tipo_forma_pagamento': Comprovante.tpFormaDePagamentoLabel,

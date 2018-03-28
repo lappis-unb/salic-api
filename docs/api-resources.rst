@@ -21,7 +21,10 @@ Fornecedor
 Incentivador
 ~~~~~~~~~~~~
 
-  .. autoclass:: salic_api.resources.Doacao
+  .. autoclass:: salic_api.resources.DoacaoList
+    :members:
+
+  .. autoclass:: salic_api.resources.DoacaoDetail
     :members:
 
   .. autoclass:: salic_api.resources.IncentivadorDetail

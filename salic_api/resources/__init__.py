@@ -4,7 +4,7 @@ from .fornecedor.fornecedor_detail import FornecedorDetail
 from .fornecedor.fornecedor_list import FornecedorList
 from .fornecedor.produto import ProdutoDetail, Produto
 
-from .incentivador.doacao import DoacaoList
+from .incentivador.doacao import DoacaoList, DoacaoDetail
 from .incentivador.incentivador_detail import IncentivadorDetail
 from .incentivador.incentivador_list import IncentivadorList
 from .incentivador.query import IncentivadorQuery, DoacaoQuery

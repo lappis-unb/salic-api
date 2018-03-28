@@ -20,7 +20,9 @@
 import os
 import sys
 cd = os.path.dirname
-src_path = os.path.join(cd(cd(__file__)), 'src')
+repo_path = cd(cd(__file__))
+src_path = os.path.join(repo_path, 'src')
+sys.path.insert(0, repo_path)
 sys.path.insert(0, src_path)
 
 # -- General configuration ------------------------------------------------

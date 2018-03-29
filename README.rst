@@ -7,7 +7,7 @@
    :alt: Code coverage
 
 .. image:: https://media.readthedocs.org/static/projects/badges/passing.svg
-   :target: http://salic-api.readthedocs.io/pt/latest/
+   :target: https://salic-api.readthedocs.io/pt/latest/
    :alt: Documentation
 
 .. image:: https://api.codeclimate.com/v1/badges/864270a3891b6750927e/maintainability

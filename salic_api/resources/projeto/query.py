@@ -25,7 +25,6 @@ from ...utils import timer
 # SQL procedures
 #
 use_sql_procedures = False if env.get('SQL_DRIVER', 'sqlite') == 'sqlite' else True
-use_sql_procedures = False
 
 def dummy(field, id_projeto, *args):
     return getattr(Custos, field)

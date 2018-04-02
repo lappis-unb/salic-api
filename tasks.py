@@ -15,15 +15,6 @@ def install(ctx):
 
 
 @task
-def test(ctx):
-    "Run tests."
-
-    from pytest import main
-
-    main(['tests'])
-
-
-@task
 def cov(ctx):
     "Run coverage analysis."
 
@@ -89,3 +80,18 @@ def db(ctx, force=False):
     make_tables(driver='sqlite')
     populate(driver='sqlite')
     print('Db created successfully!')
+
+
+@task(
+    help={'production': 'runs the tests comparing with the real api'}
+)
+def test(ctx, production=False):
+    """
+    Run tests
+    """
+    test_command = 'pytest -vv --maxfail=20'
+
+    if production:
+        ctx.run(test_command+' tests/production/')
+    else:
+        ctx.run(test_command+' tests/static/')

@@ -1,4 +1,4 @@
-from .test_utils import *
+from test_utils import *
 
 class TestProponente:
     def test_list_and_detail_fields(self):

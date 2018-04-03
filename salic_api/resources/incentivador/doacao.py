@@ -8,8 +8,6 @@ from ..resource import ListResource, DetailResource
 from ..serialization import listify_queryset
 from ...utils import encrypt, decrypt
 
-log = logging.getLogger('salic-api')
-
 
 class DoacaoDetail(DetailResource):
     def hal_links(self, result):

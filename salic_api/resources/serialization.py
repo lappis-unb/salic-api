@@ -7,9 +7,6 @@ import logging
 
 import dicttoxml
 
-log = logging.getLogger('dicttoxml')
-log.setLevel(logging.ERROR)
-
 
 def listify_queryset(queryset):
     """

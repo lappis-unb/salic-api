@@ -1,6 +1,7 @@
 from datetime import datetime
 
-from salic_api.models import ComprovantePagamentoxPlanilhaAprovacao, ComprovantePagamento, ArquivoImagem, Documento, \
+from salic_api.models import ComprovantePagamentoxPlanilhaAprovacao, \
+    ComprovantePagamento, ArquivoImagem, Documento, \
     DocumentoProjeto, ItemCusto
 
 

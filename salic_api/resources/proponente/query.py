@@ -40,8 +40,7 @@ class ProponenteQuery(Query):
         Interessado.tipoPessoa,
     )
 
-    def query(self, limit=1, offset=0, nome=None, cgccpf=None, municipio=None,
-              UF=None, tipo_pessoa=None):
+    def query(self, limit=1, offset=0, **kwargs):
 
         query = self.raw_query(*self.query_fields)
         query = query.select_from(Interessado)
@@ -71,18 +70,4 @@ class ProponenteQuery(Query):
         sort_field = sort_mapping_fields[sort_field]
 
         return query
-####################################
 
-
-#         # order by descending
-#         if sort_order == 'desc':
-#             query = query.order_by(desc(sort_field))
-#         # order by ascending
-#         else:
-#             query = query.order_by(sort_field)
-#
-#         total_records = query.count()
-#
-#         query = query.slice(start_row, end_row)
-#
-#         return res.query(), total_records

@@ -8,7 +8,7 @@ dirname = os.path.join
 STATIC_URL_PATH = dirname(os.path.dirname(os.path.dirname(__file__)), 'static')
 
 
-def create_app(config_file='development.cfg'):
+def create_app():
     from .urls import make_urls
     from .general_config import ENVIRONMENT
 

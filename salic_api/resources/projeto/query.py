@@ -565,60 +565,60 @@ class AdequacoesPedidoQuery(Query):
     def query(self, IdPRONAC):  # noqa: N803
         return []  # FIXME
 
-        stmt = text("""
-            SELECT
-                a.idReadequacao,
-                a.idPronac,
-                a.dtSolicitacao,
-                CAST(a.dsSolicitacao AS TEXT) AS dsSolicitacao,
-                CAST(a.dsJustificativa AS TEXT) AS dsJustificativa,
-                a.idSolicitante,
-                a.idAvaliador,
-                a.dtAvaliador,
-                CAST(a.dsAvaliacao AS TEXT) AS dsAvaliacao,
-                a.idTipoReadequacao,
-                CAST(c.dsReadequacao AS TEXT) AS dsReadequacao,
-                a.stAtendimento,
-                a.siEncaminhamento,
-                CAST(b.dsEncaminhamento AS TEXT) AS dsEncaminhamento,
-                a.stEstado,
-                e.idArquivo,
-                e.nmArquivo
-             FROM SAC.dbo.tbReadequacao AS a
-             INNER JOIN SAC.dbo.tbTipoEncaminhamento AS b ON a.siEncaminhamento = b.idTipoEncaminhamento INNER JOIN SAC.dbo.tbTipoReadequacao AS c ON c.idTipoReadequacao = a.idTipoReadequacao
-             LEFT JOIN BDCORPORATIVO.scCorp.tbDocumento AS d ON d.idDocumento = a.idDocumento
-             LEFT JOIN BDCORPORATIVO.scCorp.tbArquivo AS e ON e.idArquivo = d.idArquivo WHERE (a.idPronac = :IdPRONAC) AND (a.siEncaminhamento <> 12)
-            """)
-        return self.execute_query(stmt, {'IdPRONAC': IdPRONAC})
+        # stmt = text("""
+        #     SELECT
+        #         a.idReadequacao,
+        #         a.idPronac,
+        #         a.dtSolicitacao,
+        #         CAST(a.dsSolicitacao AS TEXT) AS dsSolicitacao,
+        #         CAST(a.dsJustificativa AS TEXT) AS dsJustificativa,
+        #         a.idSolicitante,
+        #         a.idAvaliador,
+        #         a.dtAvaliador,
+        #         CAST(a.dsAvaliacao AS TEXT) AS dsAvaliacao,
+        #         a.idTipoReadequacao,
+        #         CAST(c.dsReadequacao AS TEXT) AS dsReadequacao,
+        #         a.stAtendimento,
+        #         a.siEncaminhamento,
+        #         CAST(b.dsEncaminhamento AS TEXT) AS dsEncaminhamento,
+        #         a.stEstado,
+        #         e.idArquivo,
+        #         e.nmArquivo
+        #      FROM SAC.dbo.tbReadequacao AS a
+        #      INNER JOIN SAC.dbo.tbTipoEncaminhamento AS b ON a.siEncaminhamento = b.idTipoEncaminhamento INNER JOIN SAC.dbo.tbTipoReadequacao AS c ON c.idTipoReadequacao = a.idTipoReadequacao
+        #      LEFT JOIN BDCORPORATIVO.scCorp.tbDocumento AS d ON d.idDocumento = a.idDocumento
+        #      LEFT JOIN BDCORPORATIVO.scCorp.tbArquivo AS e ON e.idArquivo = d.idArquivo WHERE (a.idPronac = :IdPRONAC) AND (a.siEncaminhamento <> 12)
+        #     """)
+        # return self.execute_query(stmt, {'IdPRONAC': IdPRONAC})
 
 
 class AdequacoesParecerQuery(Query):
     def query(self, IdPRONAC):  # noqa: N803
         return []  # FIXME
 
-        stmt = text("""
-            SELECT
-                a.idReadequacao,
-                a.idPronac,
-                a.dtSolicitacao,
-                CAST(a.dsSolicitacao AS TEXT) AS dsSolicitacao,
-                CAST(a.dsJustificativa AS TEXT) AS dsJustificativa,
-                a.idSolicitante,
-                a.idAvaliador,
-                a.dtAvaliador,
-                CAST(a.dsAvaliacao AS TEXT) AS dsAvaliacao,
-                a.idTipoReadequacao,
-                CAST(c.dsReadequacao AS TEXT) AS dsReadequacao,
-                a.stAtendimento,
-                a.siEncaminhamento,
-                CAST(b.dsEncaminhamento AS TEXT) AS dsEncaminhamento,
-                a.stEstado,
-                e.idArquivo,
-                e.nmArquivo
-            FROM tbReadequacao AS a
-            INNER JOIN SAC.dbo.tbTipoEncaminhamento AS b ON a.siEncaminhamento = b.idTipoEncaminhamento
-            INNER JOIN SAC.dbo.tbTipoReadequacao AS c ON c.idTipoReadequacao = a.idTipoReadequacao
-            LEFT JOIN BDCORPORATIVO.scCorp.tbDocumento AS d ON d.idDocumento = a.idDocumento
-            LEFT JOIN BDCORPORATIVO.scCorp.tbArquivo AS e ON e.idArquivo = d.idArquivo WHERE (a.idPronac = :IdPRONAC) AND (a.siEncaminhamento <> 12)
-        """)
-        return self.execute_query(stmt, {'IdPRONAC': IdPRONAC})
+        # stmt = text("""
+        #     SELECT
+        #         a.idReadequacao,
+        #         a.idPronac,
+        #         a.dtSolicitacao,
+        #         CAST(a.dsSolicitacao AS TEXT) AS dsSolicitacao,
+        #         CAST(a.dsJustificativa AS TEXT) AS dsJustificativa,
+        #         a.idSolicitante,
+        #         a.idAvaliador,
+        #         a.dtAvaliador,
+        #         CAST(a.dsAvaliacao AS TEXT) AS dsAvaliacao,
+        #         a.idTipoReadequacao,
+        #         CAST(c.dsReadequacao AS TEXT) AS dsReadequacao,
+        #         a.stAtendimento,
+        #         a.siEncaminhamento,
+        #         CAST(b.dsEncaminhamento AS TEXT) AS dsEncaminhamento,
+        #         a.stEstado,
+        #         e.idArquivo,
+        #         e.nmArquivo
+        #     FROM tbReadequacao AS a
+        #     INNER JOIN SAC.dbo.tbTipoEncaminhamento AS b ON a.siEncaminhamento = b.idTipoEncaminhamento
+        #     INNER JOIN SAC.dbo.tbTipoReadequacao AS c ON c.idTipoReadequacao = a.idTipoReadequacao
+        #     LEFT JOIN BDCORPORATIVO.scCorp.tbDocumento AS d ON d.idDocumento = a.idDocumento
+        #     LEFT JOIN BDCORPORATIVO.scCorp.tbArquivo AS e ON e.idArquivo = d.idArquivo WHERE (a.idPronac = :IdPRONAC) AND (a.siEncaminhamento <> 12)
+        # """)
+        # return self.execute_query(stmt, {'IdPRONAC': IdPRONAC})

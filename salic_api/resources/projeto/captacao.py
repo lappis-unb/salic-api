@@ -6,8 +6,6 @@ from .query import CaptacaoQuery
 from ..resource import ListResource
 from ...utils import encrypt
 
-log = logging.getLogger('salic-api')
-
 
 class Captacao(ListResource):
     query_class = CaptacaoQuery

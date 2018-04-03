@@ -14,13 +14,20 @@ def install(ctx):
     ctx.run(sys.executable + ' -m pip install -e .[dev]')
 
 
-@task
-def test(ctx):
-    "Run tests."
+@task(
+    help={'production': 'runs the tests comparing to actual api'}
+)
+def test(ctx, production=False):
+    """
+    Run tests.
+    """
 
-    from pytest import main
+    test_command = 'pytest -vv --maxfail=20 '
 
-    main(['tests'])
+    if production:
+        ctx.run(test_command + 'tests/production/')
+    else:
+        ctx.run(test_command + 'tests/static/')
 
 
 @task

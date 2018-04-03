@@ -70,4 +70,3 @@ class ProponenteQuery(Query):
         sort_field = sort_mapping_fields[sort_field]
 
         return query
-

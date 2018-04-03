@@ -17,13 +17,20 @@ def make_request(endpoint):
     return salic_data, api_data
 
 def check_fields(salic_data, api_data, specific_field=None):
+    missing_keys = []
+
     if specific_field is not None:
         salic_data = salic_data.get(specific_field)
         api_data = api_data.get(specific_field)
 
     for key in salic_data.keys():
         if key not in api_data:
-            return False
+            missing_keys.append(key)
+
+    if len(missing_keys):
+        print('Missing keys:')
+        print(missing_keys)
+        return False
 
     return True
 

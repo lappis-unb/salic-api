@@ -7,6 +7,7 @@ from flask import request
 from flask_cache import Cache
 from flask_restful import Resource
 from sqlalchemy.sql.functions import sum as sql_sum
+from sqlalchemy import desc
 
 from .query import filter_query, filter_query_like
 from .serialization import serialize, listify_queryset

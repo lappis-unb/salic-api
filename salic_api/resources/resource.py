@@ -314,14 +314,17 @@ class SalicResource(Resource):
                 for testing.
         """
         if not raw:
-            columns = self.csv_columns
+            if isinstance(self,ListResource):
+                columns = self.detail_resource_class.csv_columns
+                data = data['_embedded'][self.embedding_field]
+            else:
+                columns = self.csv_columns
 
             if columns is None:
                 class_name = type(self).__name__
                 msg = 'resource %s must define a csv_columns attribute ' \
                     'in order to support CSV' % class_name
                 raise RuntimeError(msg)
-
             data = serialize(data, 'csv', columns=columns)
             resource_path = request.path.split("/")
 

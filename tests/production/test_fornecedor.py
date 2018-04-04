@@ -8,9 +8,9 @@ class TestFornecedor:
         # TODO check why there are some cgccpfs coming null
         salic, api = make_request('fornecedores')
         salic_products = salic['_embedded']['fornecedores'] \
-        [1]['_links']['produtos']
+        [0]['_links']['produtos']
         api_products = api['_embedded']['fornecedores'] \
-        [1]['_links']['produtos']
+        [0]['_links']['produtos']
 
         result_salic = requests.get(salic_products)
         salic_data = json.loads(result_salic.text)

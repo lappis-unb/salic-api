@@ -27,7 +27,7 @@ def test(ctx, production=False):
     if production:
         ctx.run(test_command + 'tests/production/')
     else:
-        ctx.run(test_command + 'tests/static/')
+        ctx.run(test_command + 'tests/ --ignore=tests/production/')
 
 
 @task

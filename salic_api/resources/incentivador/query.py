@@ -52,6 +52,7 @@ class DoacaoQuery(Query):
     def query(self, cgccpf, limit=100, offset=0, **kwargs):
         query = (
             self.raw_query(*self.query_fields)
+            .join(Projeto, Captacao.PRONAC == Projeto.PRONAC)
             .join(Interessado, Captacao.CgcCpfMecena == Interessado.CgcCpf)
         )
 

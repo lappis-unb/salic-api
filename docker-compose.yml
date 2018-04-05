@@ -3,7 +3,7 @@ services:
   gunicorn:
     build:
       context: .
-      dockerfile: ./docker/Dockerfile
+      dockerfile: ./docker/Dockerfile_pyodbc
 
   nginx:
     build:
@@ -12,6 +12,6 @@ services:
 
     ports:
       - "80:80"
-    
+
     depends_on:
       - gunicorn

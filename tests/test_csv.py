@@ -1,4 +1,6 @@
 import pytest
+from salic_api import fixtures as ex
+from salic_api.fixtures import examples
 
 
 @pytest.mark.usefixtures('db_data')
@@ -28,6 +30,14 @@ class TestCsv:
         expected = PROJETO_CSV
         check_csv(client, url, expected)
 
+class TestCsvList:
+    def test_fornecedor_list_csv(self,client):
+        with examples([ex.mecanismo_example]):
+            with examples([ex.pre_projeto_example], 2):
+                url = '/v1/propostas/'
+                expected = PROPOSTA_CSV_LIST
+                check_csv(client, url, expected)
+
 
 def check_csv(client, url, expected):
     response = client.get(url + '?format=csv')
@@ -55,6 +65,22 @@ PROPOSTA_CSV = (
     "EspecificacaoTecnica 1,Acessibilidade,cultural,"
     "EtapaDeTrabalho,ResumoDoProjeto 1,Justificativa 1\r\n")
 
+PROPOSTA_CSV_LIST = (
+    "impacto_ambiental,ficha_tecnica,data_termino,id,mecanismo,"
+    "data_arquivamento,data_inicio,democratizacao,data_aceite,sinopse,nome,"
+    "estrategia_execucao,especificacao_tecnica,acessibilidade,objetivos,etapa,"
+    "resumo,justificativa\r\n"
+
+    "ImpactoAmbiental 1,FichaTecnica,2000-02-01,1,FNC,2000-03-01,2000-01-01,"
+    "DemocratizacaoDeAcesso,2000-01-01,Sinopse 1,NomeProjeto 1,EstrategiadeExecucao 1,"
+    "EspecificacaoTecnica 1,Acessibilidade,cultural,"
+    "EtapaDeTrabalho,ResumoDoProjeto 1,Justificativa 1\r\n"
+
+    "ImpactoAmbiental 2,FichaTecnica,2000-02-01,2,Mecenato,2000-03-01,2000-01-01,"
+    "DemocratizacaoDeAcesso,2000-01-01,Sinopse 2,NomeProjeto 2,EstrategiadeExecucao 2,"
+    "EspecificacaoTecnica 2,Acessibilidade,cultural,"
+    "EtapaDeTrabalho,ResumoDoProjeto 2,Justificativa 2\r\n"
+)
 FORNECEDOR_CSV = """email,nome,cgccpf
 email 1,Name 1,1234
 """.replace('\n', '\r\n')

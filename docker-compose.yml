@@ -5,6 +5,9 @@ services:
       context: .
       dockerfile: ./docker/Dockerfile_pyodbc
 
+    volumes:
+      - ./:/app
+
   nginx:
     build:
       context: .

@@ -316,3 +316,15 @@ class Deslocamento(DeslocamentoBase, Base):
     idUFDestino = Column(Integer, ForeignKey(foreign_key(UFBase, "iduf")))
     idMunicipioDestino = Column(Integer,
                                 ForeignKey(foreign_key(MunicipiosBase, "idMunicipioIBGE")))
+
+
+class Prorrogacao(ProrrogacaoBase, Base):
+    idProrrogacao = Column(Integer, primary_key=True)
+    Logon = Column(Integer)
+    DtPedido = Column(DateTime)
+    DtInicio = Column(DateTime)
+    DtFinal = Column(DateTime)
+    Observacao = Column(String)
+    Atendimento = Column(String)
+    idPronac = Column(Integer)
+

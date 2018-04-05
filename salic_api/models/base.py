@@ -27,24 +27,6 @@ def table_name(name):
 def foreign_key(table,column):
     return '{}.{}'.format(table.__tablename__, column)
 
-# FIXME put right columns when given access to this table.
-# for now using made up primary key
-class Prorrogacao(Base):
-    """
-    Contem a data de início e de fim da projeto
-    (???.???.prorrogacao)
-    """
-    __tablename__ = table_name('prorrogacao')
-
-    idProrrogacao = Column(Integer, primary_key=True)
-    Logon = Column(Integer)
-    DtPedido = Column(DateTime)
-    DtInicio = Column(DateTime)
-    DtFinal = Column(DateTime)
-    Observacao = Column(String)
-    Atendimento = Column(String)
-    idPronac = Column(Integer)
-
 
 class ItemCustoBase:
     __tablename__ = table_name('BDCORPORATIVO.scSAC.tbItemCusto')
@@ -96,6 +78,13 @@ class UFBase:
 
 class MunicipiosBase:
     __tablename__ = table_name('Agentes.dbo.Municipios')
+
+
+class ProrrogacaoBase:
+    """
+    Contem a data de início e de fim da projeto
+    """
+    __tablename__ = table_name('SAC.dbo.Prorrogacao')
 
 
 class SegmentoBase:

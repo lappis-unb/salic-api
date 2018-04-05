@@ -150,12 +150,16 @@ class ProjetoDetail(DetailResource):
         certidoes_negativas = CertidoesNegativasQuery().query(pronac)
         projeto['certidoes_negativas'] = listify_queryset(certidoes_negativas)
 
-        if use_sqlite: # ## Documentos anexados #TODO ERRO: Permission Denied (Uncomment tests/examples.py line 123
-            documentos = ProjetoQuery().attached_documents(pronac)
-            projeto['documentos_anexados'] = self.cleaned_documentos(documentos)
+        documentos = []
+        marcas = []
+        if use_sqlite: #TODO remove this conditional when in production
+            documentos =  ProjetoQuery().attached_documents(pronac)
+            marcas = ProjetoQuery().attached_brands(pronac)
+
+        ## Documentos anexados
+        projeto['documentos_anexados'] = self.cleaned_documentos(documentos)
 
         ## Marcas anexadas
-        marcas = ProjetoQuery().attached_brands(pronac)
         projeto['marcas_anexadas'] = marcas = listify_queryset(marcas)
         for marca in marcas:
             marca['link'] = utils.build_brand_link(marca)

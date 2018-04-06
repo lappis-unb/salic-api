@@ -9,6 +9,7 @@ from sqlalchemy.sql.functions import coalesce
 from salic_api.models import PlanoDivulgacao
 from .raw_sql import payments_listing_sql, normalize_sql
 from ..query import Query, filter_query, filter_query_like
+from ..resource import DetailResource, InvalidResult
 from ..serialization import listify_queryset
 from ...models import (
     ComprovantePagamento as Comprovante, PlanilhaItens, PlanilhaAprovacao,
@@ -130,6 +131,10 @@ class ProjetoQuery(Query):
     def query(self, limit=1, offset=0, data_inicio=None, data_inicio_min=None,
         data_inicio_max=None, data_termino=None, data_termino_min=None,
         data_termino_max=None, **kwargs):
+
+        if(kwargs.get('PRONAC')):
+           self.check_pronac(kwargs.get('PRONAC'))
+
         with timer('query projetos_list'):
         # Prepare query
             query = self.raw_query(*self.query_fields)
@@ -164,8 +169,17 @@ class ProjetoQuery(Query):
                 (Projeto.data_inicio_execucao, end_of_day(data_termino)),
                 (Projeto.data_fim_execucao, end_of_day(data_termino_max)),
             ], op=operator.le)
-
         return query
+
+    def check_pronac(self, pronac):
+        try:
+            int(pronac)
+        except ValueError:
+            result = {
+                'message': 'PRONAC must be an integer',
+                'message_code': 10
+            }
+            raise InvalidResult(result, status_code=405)
 
    #  FIXME: using SQL procedure SAC.dbo.paDocumentos #permission denied
     def attached_documents(self, pronac_id):

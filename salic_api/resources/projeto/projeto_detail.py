@@ -93,36 +93,6 @@ class ProjetoDetail(DetailResource):
         return {field: data.pop(field) for field in fields
                                        if field in data.keys()}
 
-    def links_captacoes(self, captacoes, pronac):
-        links = []
-        for captacao in captacoes:
-            url = '/incentivadores/%s' % encrypt(captacao['cgccpf'])
-            links.append({
-                'projeto': self.url('/projetos/%s' % pronac),
-                'incentivador': self.url(url),
-            })
-        return links
-
-    def links_produtos(self, produtos, pronac):
-        links = []
-        for produto in produtos:
-            cgccpf_id = encrypt(produto['cgccpf'])
-            links.append({
-                'projeto': self.url('projetos/%s' % pronac),
-                'fornecedor': self.url('/fornecedores/%s' % cgccpf_id),
-            })
-        return links
-
-    def check_pronac(self, pronac):
-        try:
-            int(pronac)
-        except ValueError:
-            result = {
-                'message': 'PRONAC must be an integer',
-                'message_code': 10
-            }
-            raise InvalidResult(result, status_code=405)
-
     def prepare_result(self, result):
         result.pop('IdPRONAC')
 

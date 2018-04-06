@@ -1,0 +1,26 @@
+stages:
+    - build
+    # - test
+    # - deploy
+
+variables:
+    NGINX_IMAGE: $CI_REGISTRY_IMAGE/salic-api/nginx-api:$CI_COMMIT_REF_NAME
+    GUNICORN_IMAGE: $CI_REGISTRY_IMAGE/salic-api/gunicorn-api:$CI_COMMIT_REF_NAME
+
+build:
+    image: docker:latest
+    stage: build
+    services:
+        - docker:dind
+    script:
+        - docker login -u "gitlab-ci-token" -p "$CI_JOB_TOKEN" $CI_REGISTRY
+        - docker build -f docker/Dockerfile -t $NGINX_IMAGE .
+        - docker tag $NGINX_IMAGE $CI_REGISTRY_IMAGE/salic-api/nginx-api:latest
+        - docker push $NGINX_IMAGE
+        - docker build -f docker/Dockerfile -t $GUNICORN_IMAGE .
+        - docker tag $GUNICORN_IMAGE $CI_REGISTRY_IMAGE/salic-api/gunicorn-api:latest
+        - docker push $GUNICORN_IMAGE
+    only:
+        - /master|gitlab-ci/
+    tags:
+        - docker

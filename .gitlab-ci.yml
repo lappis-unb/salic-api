@@ -1,7 +1,8 @@
 stages:
     - build
     # - test
-    # - deploy
+    - deploy_dev
+    # - deploy_prod
 
 variables:
     NGINX_IMAGE: $CI_REGISTRY_IMAGE/nginx-api:$CI_COMMIT_REF_NAME
@@ -17,10 +18,26 @@ build:
         - docker build -f docker/Dockerfile -t $NGINX_IMAGE .
         - docker tag $NGINX_IMAGE $CI_REGISTRY_IMAGE/nginx-api:latest
         - docker push $NGINX_IMAGE
+        - docker push $CI_REGISTRY_IMAGE/nginx-api:latest
         - docker build -f docker/Dockerfile -t $GUNICORN_IMAGE .
         - docker tag $GUNICORN_IMAGE $CI_REGISTRY_IMAGE/gunicorn-api:latest
         - docker push $GUNICORN_IMAGE
+        - docker push $CI_REGISTRY_IMAGE/gunicorn-api:latest
     only:
         - /master|gitlab-ci/
+    tags:
+        - docker
+
+deploy_homolog:
+    image: cdrx/rancher-gitlab-deploy
+    stage: deploy_dev
+    services:
+        - docker:dind
+    script:
+        - upgrade --environment Development --stack SALIC-API --service gunicorn --new-image $GUNICORN_IMAGE --no-finish-upgrade --debug
+        - upgrade --environment Development --stack SALIC-API --service nginx-api --new-image $NGINX_IMAGE --no-finish-upgrade --debug
+    only:
+        - /master|gitlab-ci/ # change to development branch only
+    environment: development
     tags:
         - docker

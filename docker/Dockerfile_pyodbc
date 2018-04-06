@@ -34,14 +34,16 @@ ENV LC_ALL C.UTF-8
 ENV LANG=C.UTF-8
 
 # Install pyodbc
-RUN pip3 install pyodbc
-COPY docker/odbcinst.ini /etc/odbcinst.ini
-ENV SQL_DRIVER pyodbc
-ENV DATABASE_HOST 192.168.10.250
-ENV DATABASE_USER sa
-ENV DATABASE_PASSWORD cd-graf005231
-ENV DATABASE_PORT 1433
+# RUN pip3 install pyodbc
+# COPY docker/odbcinst.ini /etc/odbcinst.ini
+# ENV SQL_DRIVER pyodbc
+# ENV DATABASE_HOST 192.168.10.250
+# ENV DATABASE_USER sa
+# ENV DATABASE_PASSWORD cd-graf005231
+# ENV DATABASE_PORT 1433
 
 EXPOSE 5000
+
+ENTRYPOINT ["docker/entrypoint.sh"]
 
 CMD ["inv", "run-gunicorn", "-h 0.0.0.0:5000", "-w 4"]

@@ -3,7 +3,14 @@ services:
   gunicorn:
     build:
       context: .
-      dockerfile: ./docker/Dockerfile_pyodbc
+      dockerfile: ./docker/Dockerfile
+
+    # environment:
+    #     - SQL_DRIVER=pyodbc
+    #     - DATABASE_HOST=192.168.10.250
+    #     - DATABASE_USER=sa
+    #     - DATABASE_PASSWORD=cd-graf005231
+    #     - DATABASE_PORT=1433
 
     volumes:
       - ./:/app

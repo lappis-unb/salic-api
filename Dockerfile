@@ -27,11 +27,6 @@ ENV LANG=C.UTF-8
 RUN apt-get install unixodbc-dev tdsodbc -y
 RUN pip3 install pyodbc
 COPY docker/odbcinst.ini /etc/odbcinst.ini
-ENV SQL_DRIVER pyodbc
-ENV DATABASE_HOST 192.168.10.250
-ENV DATABASE_USER sa
-ENV DATABASE_PASSWORD cd-graf005231
-ENV DATABASE_PORT 1433
 
 # Expose host's port to run the web application
 EXPOSE 5000

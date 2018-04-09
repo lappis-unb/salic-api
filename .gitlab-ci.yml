@@ -24,7 +24,7 @@ build:
         - docker push $GUNICORN_IMAGE
         - docker push $CI_REGISTRY_IMAGE/gunicorn-api:latest
     only:
-        - /master|gitlab-ci/
+        - /master/
     tags:
         - docker
 
@@ -51,7 +51,7 @@ deploy_homolog:
         - upgrade --environment Development --stack SALIC-API --service gunicorn --new-image $GUNICORN_IMAGE --no-finish-upgrade --debug
         - upgrade --environment Development --stack SALIC-API --service nginx-api --new-image $NGINX_IMAGE --no-finish-upgrade --debug
     only:
-        - /master|gitlab-ci/ # change to development branch only
+        - /master/ # change to development branch only
     environment: development
     tags:
         - docker

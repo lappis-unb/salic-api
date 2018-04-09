@@ -1,6 +1,6 @@
 stages:
     - build
-    # - test
+    - test
     - deploy_dev
     # - deploy_prod
 
@@ -26,6 +26,20 @@ build:
     only:
         - /master|gitlab-ci/
     tags:
+        - docker
+
+test:
+  image: docker:latest
+  stage: test
+  services:
+        - docker:dind
+  script:
+        - docker pull $GUNICORN_IMAGE
+        - docker run $GUNICORN_IMAGE inv test
+  only:
+        - /master|gitlab-ci/
+  environment: test
+  tags:
         - docker
 
 deploy_homolog:

@@ -7,7 +7,7 @@ from sqlalchemy.sql.expression import desc, alias
 from sqlalchemy.sql.functions import coalesce
 
 from salic_api.models import PlanoDivulgacao
-from .raw_sql import payments_listing_sql, normalize_sql
+from .raw_sql import normalize_sql
 from ..query import Query, filter_query, filter_query_like
 from ..resource import DetailResource, InvalidResult
 from ..serialization import listify_queryset
@@ -19,7 +19,9 @@ from ...models import (
     Captacao, CertidoesNegativas, Verificacao, PlanoDistribuicao, Produto, Area,
     Segmento, Custos, Mecanismo, Arquivo, ArquivoImagem, Documento,
     DocumentoProjeto, Prorrogacao, Usuarios, Readequacao, TipoReadequacao,
-    TipoEncaminhamento, Pais, Municipios, UF, Deslocamento)
+    TipoEncaminhamento, Pais, Municipios, UF, Deslocamento, Agentes,
+    Nomes
+    )
 from ...utils import timer
 
 #
@@ -228,53 +230,81 @@ class ProjetoQuery(Query):
 
         return self.execute_query(query, {'IdPRONAC': idPronac}).fetchall()
 
-    def payments_listing(self, limit=None, offset=None, idPronac=None,
-                         cgccpf=None):
-        params = {'offset': offset, 'limit': limit}
-        if idPronac:
-            params['idPronac'] = idPronac
+    def payments_listing(self, limit=None, offset=None, **kwargs): #idPronac=None, cgccpf=None):
+        query_fields = (
+            PlanilhaItens.Descricao.label('nome'),
+            Comprovante.idComprovantePagamento. \
+                label('id_comprovante_pagamento'),
+            ComprovanteAprovacao.idPlanilhaAprovacao. \
+                label('id_planilha_aprovacao'),
+            Agentes.CNPJCPF.label('cgccpf'),
+            Nomes.Descricao.label('nome_fornecedor'),
+            Comprovante.DtPagamento.label('data_aprovacao'),
+
+            case([
+                (Comprovante.tpDocumento == '1', 'Boleto Bancario'),
+                (Comprovante.tpDocumento == '2', 'Cupom Fiscal'),
+                (Comprovante.tpDocumento == '3', 'Guia de Recolhimento'),
+                (Comprovante.tpDocumento == '4', 'Nota Fiscal/Fatura'),
+                (Comprovante.tpDocumento == '5', 'Recibo de Pagamento'),
+                (Comprovante.tpDocumento == '6', 'RPA'),
+            ]).label('tipo_documento'),
+            Comprovante.nrComprovante.label('nr_comprovante'),
+            Comprovante.dtEmissao.label('data_pagamento'),
+
+            case([
+                (Comprovante.tpFormaDePagamento == '1', 'Cheque'),
+                (Comprovante.tpFormaDePagamento == '2', 'Transferencia Bancaria'),
+                (Comprovante.tpFormaDePagamento == '3', 'Saque/Dinheiro'),
+            ]).label('tipo_forma_pagamento'),
+            Comprovante.nrDocumentoDePagamento.label('nr_documento_pagamento'),
+            ComprovanteAprovacao.vlComprovado.label('valor_pagamento'),
+            Comprovante.idArquivo.label('id_arquivo'),
+            Comprovante.dsJustificativa.label('justificativa'),
+            Arquivo.nmArquivo.label('nm_arquivo'),
+        )
+
+        if not kwargs.get('idPronac'):
+            query_fields = query_fields + (Projeto.PRONAC.label('PRONAC'),)
+
+        query = self.raw_query(*query_fields)
+        query = query.select_from(ComprovanteAprovacao)
+
+        query = (query
+                 .join(Comprovante,
+                    ComprovanteAprovacao.idComprovantePagamento ==
+                    Comprovante.idComprovantePagamento)
+                .outerjoin(PlanilhaAprovacao,
+                    PlanilhaAprovacao.idPlanilhaAprovacao ==
+                    ComprovanteAprovacao.idPlanilhaAprovacao)
+                .outerjoin(PlanilhaItens,
+                    PlanilhaItens.idPlanilhaItens ==
+                    PlanilhaAprovacao.idPlanilhaItem)
+                .outerjoin(Nomes,
+                    Nomes.idAgente == Comprovante.idFornecedor)
+                .outerjoin(Arquivo,
+                    Arquivo.idArquivo == Comprovante.idArquivo)
+                .outerjoin(Agentes,
+                    Agentes.idAgente == Comprovante.idFornecedor)
+                )
+
+        if not kwargs.get('idPronac'):
+            query = (query
+                .join(Projeto,
+                    Projeto.IdPRONAC ==  PlanilhaAprovacao.idPronac)
+                .filter(Agentes.CNPJCPF.like(kwargs.get('cgccpf')))
+                )
         else:
-            params['cgccpf'] = '%{}%'.format(cgccpf)
-        query = payments_listing_sql(idPronac, limit is not None)
-        return self.execute_query(query, params).fetchall()
+            query = (query
+                .filter(PlanilhaAprovacao.idPronac==kwargs.get('idPronac')))
 
-    #def payments_listing_count(self, idPronac=None, cgccpf=None):  # noqa: N803
-    #    if idPronac is not None:
-    #        query = text(normalize_sql("""
-    #                SELECT
-    #                    COUNT(b.idArquivo) AS total
+        query = query.order_by(Comprovante.dtEmissao)
+        if(limit):
+            query = query.limit(limit)
+        if(offset):
+            query = query.offset(offset)
 
-    #                    FROM BDCORPORATIVO.scSAC.tbComprovantePagamentoxPlanilhaAprovacao AS a
-    #                    INNER JOIN BDCORPORATIVO.scSAC.tbComprovantePagamento AS b ON a.idComprovantePagamento = b.idComprovantePagamento
-    #                    LEFT JOIN SAC.dbo.tbPlanilhaAprovacao AS c ON a.idPlanilhaAprovacao = c.idPlanilhaAprovacao
-    #                    LEFT JOIN SAC.dbo.tbPlanilhaItens AS d ON c.idPlanilhaItem = d.idPlanilhaItens
-    #                    LEFT JOIN Agentes.dbo.Nomes AS e ON b.idFornecedor = e.idAgente
-    #                    LEFT JOIN BDCORPORATIVO.scCorp.tbArquivo AS f ON b.idArquivo = f.idArquivo
-    #                    LEFT JOIN Agentes.dbo.Agentes AS g ON b.idFornecedor = g.idAgente WHERE (c.idPronac = :idPronac)
-    #                """))
-    #        params = {'idPronac': idPronac}
-    #        result = self.execute_query(query, params).fetchall()
-
-    #    else:
-    #        query = text(normalize_sql("""
-    #                SELECT
-    #                    COUNT(b.idArquivo) AS total
-
-    #                    FROM BDCORPORATIVO.scSAC.tbComprovantePagamentoxPlanilhaAprovacao AS a
-    #                    INNER JOIN BDCORPORATIVO.scSAC.tbComprovantePagamento AS b ON a.idComprovantePagamento = b.idComprovantePagamento
-    #                    LEFT JOIN SAC.dbo.tbPlanilhaAprovacao AS c ON a.idPlanilhaAprovacao = c.idPlanilhaAprovacao
-    #                    LEFT JOIN SAC.dbo.tbPlanilhaItens AS d ON c.idPlanilhaItem = d.idPlanilhaItens
-    #                    LEFT JOIN Agentes.dbo.Nomes AS e ON b.idFornecedor = e.idAgente
-    #                    LEFT JOIN BDCORPORATIVO.scCorp.tbArquivo AS f ON b.idArquivo = f.idArquivo
-    #                    JOIN SAC.dbo.Projetos AS Projetos ON c.idPronac = Projetos.IdPRONAC
-    #                    LEFT JOIN Agentes.dbo.Agentes AS g ON b.idFornecedor = g.idAgente WHERE (g.CNPJCPF LIKE :cgccpf)
-    #                """))
-
-    #        params = {'cgccpf': '%' + cgccpf + '%'}
-    #        result = self.execute_query(query, params).fetchall()
-
-    #    n_records = listify_queryset(result)
-    #    return n_records[0]['total']
+        return self.execute_query(query).fetchall()
 
     def taxing_report(self, idPronac):  # noqa: N803
         # Relatório fisco
@@ -575,64 +605,3 @@ class ReadequacaoQuery(Query):
 
         return query
 
-class AdequacoesPedidoQuery(Query):
-    def query(self, IdPRONAC):  # noqa: N803
-        return []  # FIXME
-
-        # stmt = text("""
-        #     SELECT
-        #         a.idReadequacao,
-        #         a.idPronac,
-        #         a.dtSolicitacao,
-        #         CAST(a.dsSolicitacao AS TEXT) AS dsSolicitacao,
-        #         CAST(a.dsJustificativa AS TEXT) AS dsJustificativa,
-        #         a.idSolicitante,
-        #         a.idAvaliador,
-        #         a.dtAvaliador,
-        #         CAST(a.dsAvaliacao AS TEXT) AS dsAvaliacao,
-        #         a.idTipoReadequacao,
-        #         CAST(c.dsReadequacao AS TEXT) AS dsReadequacao,
-        #         a.stAtendimento,
-        #         a.siEncaminhamento,
-        #         CAST(b.dsEncaminhamento AS TEXT) AS dsEncaminhamento,
-        #         a.stEstado,
-        #         e.idArquivo,
-        #         e.nmArquivo
-        #      FROM SAC.dbo.tbReadequacao AS a
-        #      INNER JOIN SAC.dbo.tbTipoEncaminhamento AS b ON a.siEncaminhamento = b.idTipoEncaminhamento INNER JOIN SAC.dbo.tbTipoReadequacao AS c ON c.idTipoReadequacao = a.idTipoReadequacao
-        #      LEFT JOIN BDCORPORATIVO.scCorp.tbDocumento AS d ON d.idDocumento = a.idDocumento
-        #      LEFT JOIN BDCORPORATIVO.scCorp.tbArquivo AS e ON e.idArquivo = d.idArquivo WHERE (a.idPronac = :IdPRONAC) AND (a.siEncaminhamento <> 12)
-        #     """)
-        # return self.execute_query(stmt, {'IdPRONAC': IdPRONAC})
-
-
-class AdequacoesParecerQuery(Query):
-    def query(self, IdPRONAC):  # noqa: N803
-        return []  # FIXME
-
-        # stmt = text("""
-        #     SELECT
-        #         a.idReadequacao,
-        #         a.idPronac,
-        #         a.dtSolicitacao,
-        #         CAST(a.dsSolicitacao AS TEXT) AS dsSolicitacao,
-        #         CAST(a.dsJustificativa AS TEXT) AS dsJustificativa,
-        #         a.idSolicitante,
-        #         a.idAvaliador,
-        #         a.dtAvaliador,
-        #         CAST(a.dsAvaliacao AS TEXT) AS dsAvaliacao,
-        #         a.idTipoReadequacao,
-        #         CAST(c.dsReadequacao AS TEXT) AS dsReadequacao,
-        #         a.stAtendimento,
-        #         a.siEncaminhamento,
-        #         CAST(b.dsEncaminhamento AS TEXT) AS dsEncaminhamento,
-        #         a.stEstado,
-        #         e.idArquivo,
-        #         e.nmArquivo
-        #     FROM tbReadequacao AS a
-        #     INNER JOIN SAC.dbo.tbTipoEncaminhamento AS b ON a.siEncaminhamento = b.idTipoEncaminhamento
-        #     INNER JOIN SAC.dbo.tbTipoReadequacao AS c ON c.idTipoReadequacao = a.idTipoReadequacao
-        #     LEFT JOIN BDCORPORATIVO.scCorp.tbDocumento AS d ON d.idDocumento = a.idDocumento
-        #     LEFT JOIN BDCORPORATIVO.scCorp.tbArquivo AS e ON e.idArquivo = d.idArquivo WHERE (a.idPronac = :IdPRONAC) AND (a.siEncaminhamento <> 12)
-        # """)
-        # return self.execute_query(stmt, {'IdPRONAC': IdPRONAC})

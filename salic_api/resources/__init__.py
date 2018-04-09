@@ -19,10 +19,8 @@ from .projeto.projeto_detail import ProjetoDetail
 from .projeto.projeto_list import ProjetoList
 from .projeto.query import ProjetoQuery, CaptacaoQuery, AreaQuery, \
     SegmentoQuery, CertidoesNegativasQuery, DivulgacaoQuery, \
-    DeslocamentoQuery, DistribuicaoQuery, ReadequacaoQuery, \
-    AdequacoesPedidoQuery
-from .projeto.raw_sql import normalize_sql, clean_sql_fields,\
-    payments_listing_sql
+    DeslocamentoQuery, DistribuicaoQuery, ReadequacaoQuery
+from .projeto.raw_sql import normalize_sql, clean_sql_fields
 from .projeto.segmento import Segmento
 from .projeto.utils import build_brand_link, build_file_link
 

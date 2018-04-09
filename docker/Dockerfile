@@ -24,6 +24,7 @@ ADD . /app
 # Install project's dependencies
 RUN python3 setup.py install
 RUN pip3 install invoke
+RUN pip3 install -e ".[dev]"
 
 # Create database
 RUN inv db --force

@@ -1,6 +1,6 @@
 FROM nginx:1.13.8
 
-COPY docker/nginx.conf /etc/nginx/nginx.conf
+COPY docker/prod/nginx.conf /etc/nginx/nginx.conf
 
 COPY ./salic_api/static /static_swagger
 COPY ./salic_api/swagger_specification_PT-BR.json /static_swagger/swagger_specification_PT-BR.json

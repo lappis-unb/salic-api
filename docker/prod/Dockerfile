@@ -8,37 +8,26 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         python3 \
         python3-pip \
         python3-crypto \
-        sqlite3 \
-        gunicorn3 \
-        unixodbc-dev \
+        python3-setuptools \
+        python3-pyodbc \
         tdsodbc \
-        build-essential \
-        libssl-dev \
-        libffi-dev \
-        python3-dev \
+        gunicorn3 \
  && rm -rf /var/lib/apt/lists/*
 
 # Copy the current directory contents into the container at /app
 ADD . /app
 
 # Install project's dependencies
-RUN python3 setup.py install
-RUN pip3 install invoke
-RUN pip3 install -e ".[dev]"
-
-# Create database
-RUN inv db --force
+RUN python3 /app/setup.py install
+RUN pip3 install -e ".[prod]"
 
 # Set enviroment variables to prevent encode related issues
 ENV LC_ALL C.UTF-8
 ENV LANG=C.UTF-8
 
 # Install pyodbc
-RUN pip3 install pyodbc
 COPY docker/odbcinst.ini /etc/odbcinst.ini
 
 EXPOSE 5000
-
-ENTRYPOINT ["docker/entrypoint.sh"]
 
 CMD ["inv", "run-gunicorn", "-h 0.0.0.0:5000", "-w 4"]

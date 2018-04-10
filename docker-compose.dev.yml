@@ -1,0 +1,12 @@
+version: '3'
+services:
+  gunicorn:
+    build:
+      context: .
+      dockerfile: ./docker/dev/Dockerfile
+
+    ports:
+      - '5000:5000'
+
+    volumes:
+      - ./:/app

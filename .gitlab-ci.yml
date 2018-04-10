@@ -1,12 +1,26 @@
 stages:
-    - build
     - test
+    - build
     - deploy_dev
     # - deploy_prod
 
 variables:
     NGINX_IMAGE: $CI_REGISTRY_IMAGE/nginx-api:$CI_COMMIT_REF_NAME
     GUNICORN_IMAGE: $CI_REGISTRY_IMAGE/gunicorn-api:$CI_COMMIT_REF_NAME
+
+test:
+  image: docker:latest
+  stage: test
+  services:
+        - docker:dind
+  script:
+        - docker build -f docker/dev/Dockerfile -t $GUNICORN_IMAGE .
+        - docker run $GUNICORN_IMAGE inv test
+  only:
+        - /master|gitlab-ci|separate_docker_dev_and_prod/
+  environment: test
+  tags:
+        - docker
 
 build:
     image: docker:latest
@@ -15,31 +29,17 @@ build:
         - docker:dind
     script:
         - docker login -u "gitlab-ci-token" -p "$CI_JOB_TOKEN" $CI_REGISTRY
-        - docker build -f docker/Dockerfile_nginx -t $NGINX_IMAGE .
+        - docker build -f docker/prod/Dockerfile_nginx -t $NGINX_IMAGE .
         - docker tag $NGINX_IMAGE $CI_REGISTRY_IMAGE/nginx-api:latest
         - docker push $NGINX_IMAGE
         - docker push $CI_REGISTRY_IMAGE/nginx-api:latest
-        - docker build -f docker/Dockerfile -t $GUNICORN_IMAGE .
+        - docker build -f docker/prod/Dockerfile -t $GUNICORN_IMAGE .
         - docker tag $GUNICORN_IMAGE $CI_REGISTRY_IMAGE/gunicorn-api:latest
         - docker push $GUNICORN_IMAGE
         - docker push $CI_REGISTRY_IMAGE/gunicorn-api:latest
     only:
-        - /master|gitlab-ci/
+        - /master|gitlab-ci|separate_docker_dev_and_prod/
     tags:
-        - docker
-
-test:
-  image: docker:latest
-  stage: test
-  services:
-        - docker:dind
-  script:
-        - docker pull $GUNICORN_IMAGE
-        - docker run $GUNICORN_IMAGE inv test
-  only:
-        - /master|gitlab-ci/
-  environment: test
-  tags:
         - docker
 
 deploy_homolog:

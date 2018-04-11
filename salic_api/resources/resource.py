@@ -67,6 +67,14 @@ class SalicResource(Resource):
         'message': 'Max limit paging exceeded',
         'message_code': 7,
     }
+    INVALID_LIMIT_PAGING_ERROR = {
+        'message': 'limit must be an integer',
+        'message_code': 7,
+    }
+    INVALID_OFFSET_PAGING_ERROR = {
+        'message': 'limit must be an integer',
+        'message_code': 7,
+    }
 
     def __init__(self, query_data=None):
         init_config()
@@ -101,13 +109,13 @@ class SalicResource(Resource):
             'message_code': 11
         }, 404)
 
-    def invalid_request_args_error(self, args):
+    def invalid_request_args_error(self, valid_args, invalid_args):
         """
         Raised when user make a request with invalid arguments.
         """
-        data = ', '.join(map(repr, args))
+        data = ', '.join(map(repr, valid_args))
         return InvalidResult({
-            'message': 'invalid request arguments: (%s)' % data,
+            'message': 'invalid request arguments: {}. Possible args: ({})'.format(invalid_args,data),
             'message_code': 13,  # Is it?
         }, 500)
 
@@ -225,10 +233,12 @@ class SalicResource(Resource):
         """
         Inject all request arguments to the dictionary of arguments.
         """
-        argset = self.request_args
-        if not self.request_args.issuperset(argset):
-            diff = self.request_args.symmetric_difference(argset)
-            raise self.invalid_request_args_error(diff)
+        argset = set(request.args)
+        query_fields = set(self.query_class.labels_to_fields)
+        valid_args = self.request_args | query_fields
+
+        if not valid_args.issuperset(argset):
+            raise self.invalid_request_args_error(sorted(valid_args), sorted(argset-query_fields))
         args = {k: v for k, v in request.args.items()}
         return dict(kwargs, **args)
 
@@ -239,10 +249,10 @@ class SalicResource(Resource):
         """
         Default response to a GET request.
         """
-        self.url_args.update(kwargs)
-        self.args.update(self.prepare_args(kwargs))
-
         try:
+            self.url_args.update(kwargs)
+            self.args.update(self.prepare_args(kwargs))
+
             data = self.fetch_result()
             return self.render(data)
 
@@ -361,8 +371,7 @@ class SalicResource(Resource):
         headers = {} if headers is None else headers
 
         if content_type is None:
-            data = dict(self.INVALID_FORMAT)
-            status_code = 405
+            raise InvalidResult(self.INVALID_FORMAT, 405)
 
         if content_type == 'xml':
             if not raw:
@@ -440,11 +449,19 @@ class ListResource(SalicResource):
 
     @property
     def limit(self):
-        return self.args.get('limit', current_app.config['LIMIT_PAGING'])
+        try:
+            limit = int(self.args.get('limit', current_app.config['LIMIT_PAGING']))
+        except ValueError as error:
+            raise InvalidResult(self.INVALID_LIMIT_PAGING_ERROR, 500)
+        return limit
 
     @property
     def offset(self):
-        return self.args.get('offset', 0)
+        try:
+            offset = int(self.args.get('offset', 0))
+        except ValueError as error:
+            raise InvalidResult(self.INVALID_OFFSET_PAGING_ERROR, 500)
+        return offset
 
     @property
     def sort_field(self):
@@ -475,25 +492,17 @@ class ListResource(SalicResource):
 
         return result
 
-    def hal_item_links(self, item):
-        """
-        Return a mapping of HAL links for a single item of the result.
-        """
-        if self.detail_resource is not None:
-            return self.prepared_detail_object(item).hal_links(item)
-        return {}
-
     def hal_pagination_links(self, results, limit=None, offset=None):
         """
         Create pagination links: self, first, last, next.
         """
-
+        limit = int(self.limit)
+        offset = int(self.offset)
         total = self.queryset_size
         base = self.url(self.resource_path)
         limit = current_app.config['LIMIT_PAGING'] if limit is None else limit
         offset = offset or 0
         pages = total // limit
-
         if limit > current_app.config['LIMIT_PAGING']:
             raise self.max_limit_paging_error()
 

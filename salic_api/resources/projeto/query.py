@@ -181,7 +181,7 @@ class ProjetoQuery(Query):
                 'message': 'PRONAC must be an integer',
                 'message_code': 10
             }
-            raise InvalidResult(result, status_code=405)
+            raise InvalidResult(result, status_code=404)
 
    #  FIXME: using SQL procedure SAC.dbo.paDocumentos #permission denied
     def attached_documents(self, pronac_id):

@@ -7,7 +7,6 @@ from sqlalchemy.sql.expression import desc, alias
 from sqlalchemy.sql.functions import coalesce
 
 from salic_api.models import PlanoDivulgacao
-from .raw_sql import normalize_sql
 from ..query import Query, filter_query, filter_query_like
 from ..resource import DetailResource, InvalidResult
 from ..serialization import listify_queryset

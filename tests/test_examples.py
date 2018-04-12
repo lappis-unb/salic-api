@@ -109,23 +109,17 @@ class TestEndpointsIsolated:
 class TestErrorResponses:
     def test_invalid_pronac(self, client):
         url = '/v1/projetos/abc'
-        with pytest.raises(InvalidResult) as e:
-            client.get(url)
-        assert e.value.args[0]['message'] == 'PRONAC must be an integer'
-        assert e.value.args[1] == 404
+        message = 'PRONAC must be an integer'
+        check_error(client, url, message, 404)
 
     def test_pronac_not_found(self, client):
         url = '/v1/projetos/123'
-        with pytest.raises(InvalidResult) as e:
-            client.get(url)
-        assert e.value.args[0]['message'] == "'Projeto' not found at http://localhost/v1/projetos/123"
-        assert e.value.args[1] == 404
+        message = "'Projeto' not found at http://localhost/v1/projetos/123"
+        check_error(client, url, message, 404)
 
     def test_invalid_argument(self, client):
         url = '/v1/propostas/?abc=1'
-        with pytest.raises(InvalidResult) as e:
-            client.get(url)
-        assert e.value.args[0]['message'] == (
+        message = (
             "invalid request arguments: "
             "['abc']. Possible args: ("
             "'acessibilidade', 'data_aceite', 'data_arquivamento', "
@@ -135,23 +129,19 @@ class TestErrorResponses:
             "'justificativa', 'limit', 'mecanismo', 'nome', 'objetivos', "
             "'offset', 'order', 'resumo', 'sinopse', 'sort')"
             )
-        assert e.value.args[1] == 500
+        check_error(client, url, message, 500)
 
     def test_empty_result(self, client):
-        url = '/v1/projetos/?UF=abc'
-        with pytest.raises(InvalidResult) as e:
-            client.get(url)
-        assert e.value.args[0]['message'] == 'No object was found with your criteria'
-        assert e.value.args[1] == 404
+        with examples(FACTORIES):
+            url = '/v1/projetos/?UF=abc'
+            message = 'No object was found with your criteria'
+            check_error(client, url, message, 404)
 
     def test_invalid_format(self, client):
-        factories = FACTORIES
-        with examples(factories):
+        with examples(FACTORIES):
             url = '/v1/projetos/?format=invalid'
-            with pytest.raises(InvalidResult) as e:
-                client.get(url)
-            assert e.value.args[0]['message'] == 'invalid format'
-            assert e.value.args[1] == 405
+            message = 'invalid format'
+            check_error(client, url, message, 405)
 
 class TestEndpointPagination:
     def get_data(self, client, limit, offset):
@@ -179,11 +169,9 @@ class TestEndpointPagination:
     def test_pagination_error(self,client):
         with examples([ex.mecanismo_example]):
             with examples([ex.pre_projeto_example], 4):
-                with pytest.raises(InvalidResult) as e:
-                    data = self.get_data(client, 200, 0)
-                assert e.value.args[0]['message'] == 'Max limit paging exceeded'
-                assert e.value.args[1] == 405
-
+                url = '/v1/propostas/?limit=200'
+                message = 'Max limit paging exceeded'
+                check_error(client, url, message, 405)
 
 def check_endpoint(client, url, expected):
     """
@@ -198,6 +186,11 @@ def check_endpoint(client, url, expected):
         assert value == expected.get('_embedded', {})[key]
     assert data == expected
 
+def check_error(client, url, message, status_code):
+    with pytest.raises(InvalidResult) as e:
+        client.get(url)
+    assert e.value.args[0]['message'] == message
+    assert e.value.args[1] == status_code
 
 def single_list(item, embed_key, url=None, **kwargs):
     """

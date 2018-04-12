@@ -15,7 +15,7 @@ build:
         - docker:dind
     script:
         - docker login -u "gitlab-ci-token" -p "$CI_JOB_TOKEN" $CI_REGISTRY
-        - docker build -f docker/Dockerfile -t $NGINX_IMAGE .
+        - docker build -f docker/Dockerfile_nginx -t $NGINX_IMAGE .
         - docker tag $NGINX_IMAGE $CI_REGISTRY_IMAGE/nginx-api:latest
         - docker push $NGINX_IMAGE
         - docker push $CI_REGISTRY_IMAGE/nginx-api:latest

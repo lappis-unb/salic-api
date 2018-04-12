@@ -1,12 +1,7 @@
-import logging
-
-from flask import current_app, request
-
 from .query import DoacaoQuery
 from ..format_utils import cgccpf_mask
 from ..resource import ListResource, DetailResource
-from ..serialization import listify_queryset
-from ...utils import encrypt, decrypt
+from ...utils import decrypt
 
 
 class DoacaoDetail(DetailResource):

@@ -126,8 +126,8 @@ def pymssql_uri(config):
            current_app.config['DATABASE_PORT']))
 
     engine = create_engine(
-             'mssql+pyodbc:///?odbc_connect={}'.format(quoted),
-             connect_args={'convert_unicode': True})
+        'mssql+pyodbc:///?odbc_connect={}'.format(quoted),
+        connect_args={'convert_unicode': True})
     engine.dialect.identifier_preparer.initial_quote = ''
     engine.dialect.identifier_preparer.final_quote = ''
 

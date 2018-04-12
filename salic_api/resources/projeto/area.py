@@ -1,6 +1,7 @@
 from .query import AreaQuery
 from ..resource import ListResource, DetailResource
 
+
 class AreaDetail(DetailResource):
     def hal_links(self, result):
         """
@@ -9,6 +10,7 @@ class AreaDetail(DetailResource):
         return {
             'self': self.url('/projetos/?area=%s' % result['codigo']),
         }
+
 
 class Area(ListResource):
     resource_path = 'projetos/areas'
@@ -19,4 +21,3 @@ class Area(ListResource):
     request_args = set()
     sort_fields = {}
     detail_pk = 'codigo'
-

@@ -2,7 +2,7 @@ from os import environ as env
 from sqlalchemy import func
 
 from ..projeto.query import custo_projeto
-from ..query import Query, filter_query, filter_query_like
+from ..query import Query
 from ...models import Interessado, Projeto, Custos
 
 use_sql_procedures = False if env.get('SQL_DRIVER', 'sqlite') == 'sqlite' else True
@@ -22,7 +22,7 @@ class ProponenteQuery(Query):
         }
     else:
         labels_to_fields = {
-            'total_captado': func.sum(func.sac.dbo.fnCustoProjeto (Projeto.AnoProjeto, Projeto.Sequencial)),
+            'total_captado': func.sum(func.sac.dbo.fnCustoProjeto(Projeto.AnoProjeto, Projeto.Sequencial)),
             'nome': Interessado.Nome,
             'municipio': Interessado.Cidade,
             'UF': Interessado.Uf,

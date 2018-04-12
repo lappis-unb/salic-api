@@ -10,7 +10,7 @@ def cgccpf_mask(cgccpf):
     if not cgccpf:
         return ''
     try:
-        if  validate_cpf(cgccpf):
+        if validate_cpf(cgccpf):
             cgccpf = '***' + cgccpf[3:9] + '**'
     except:
         pass

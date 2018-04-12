@@ -2,6 +2,7 @@ from .query import FornecedorQuery
 from ..resource import DetailResource
 from ...utils import decrypt
 
+
 class FornecedorDetail(DetailResource):
     """
     Class related with information about an specific Fornecedor

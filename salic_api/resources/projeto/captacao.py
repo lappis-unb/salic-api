@@ -1,10 +1,6 @@
-import logging
-
-from flask import current_app
-
 from .query import CaptacaoQuery
 from ..resource import ListResource
-from ...utils import encrypt
+
 
 class Captacao(ListResource):
     query_class = CaptacaoQuery

@@ -1,11 +1,8 @@
-from sqlalchemy.sql import text
-
 from ..query import Query
-from ..serialization import listify_queryset
 from ...models import Agentes, Nomes, Internet, \
     ComprovantePagamento as Comprovante, \
     ComprovantePagamentoxPlanilhaAprovacao as ComprovanteAprovacao, \
-    PlanilhaAprovacao, PlanilhaItens, Arquivo, Produto, Projeto
+    PlanilhaAprovacao, PlanilhaItens, Arquivo, Projeto
 
 
 class FornecedorQuery(Query):
@@ -48,7 +45,7 @@ class FornecedorQuery(Query):
         query = query.filter(Agentes.CNPJCPF.isnot(None))
 
         query = query.join(Projeto,
-                PlanilhaAprovacao.idPronac == Projeto.IdPRONAC)
+                           PlanilhaAprovacao.idPronac == Projeto.IdPRONAC)
 
         if PRONAC is not None:
             query = query.filter((Projeto.AnoProjeto + Projeto.Sequencial)
@@ -100,7 +97,6 @@ class ProductQuery(Query):
                             PlanilhaAprovacao.idPronac == Projeto.IdPRONAC)
                  .outerjoin(Agentes,
                             Comprovante.idFornecedor == Agentes.idAgente)
-                 .filter(Agentes.CNPJCPF.like(cgccpf))
-                )
+                 .filter(Agentes.CNPJCPF.like(cgccpf)))
 
         return query

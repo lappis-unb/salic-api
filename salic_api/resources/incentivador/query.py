@@ -1,7 +1,6 @@
 from sqlalchemy import func
-from sqlalchemy.sql.expression import desc
 
-from ..query import Query, filter_query_like, filter_query
+from ..query import Query
 from ...models import Interessado, Projeto, Captacao
 from ...utils import pc_quote
 

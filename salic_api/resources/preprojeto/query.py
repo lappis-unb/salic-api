@@ -1,5 +1,3 @@
-from sqlalchemy import desc
-
 from ..query import Query
 from ...models import PreProjeto, Mecanismo
 

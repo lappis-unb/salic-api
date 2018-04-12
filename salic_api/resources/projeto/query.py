@@ -3,13 +3,12 @@ import operator
 from os import environ as env
 from sqlalchemy import case, func, and_, or_, cast, Text
 from sqlalchemy.sql import text
-from sqlalchemy.sql.expression import desc, alias
+from sqlalchemy.sql.expression import alias
 from sqlalchemy.sql.functions import coalesce
 
 from salic_api.models import PlanoDivulgacao
-from ..query import Query, filter_query, filter_query_like
-from ..resource import DetailResource, InvalidResult
-from ..serialization import listify_queryset
+from ..query import Query, filter_query
+from ..resource import InvalidResult
 from ...models import (
     ComprovantePagamento as Comprovante, PlanilhaItens, PlanilhaAprovacao,
     ComprovantePagamentoxPlanilhaAprovacao as ComprovanteAprovacao, ItemCusto,
@@ -19,14 +18,14 @@ from ...models import (
     Segmento, Custos, Mecanismo, Arquivo, ArquivoImagem, Documento,
     DocumentoProjeto, Prorrogacao, Usuarios, Readequacao, TipoReadequacao,
     TipoEncaminhamento, Pais, Municipios, UF, Deslocamento, Agentes,
-    Nomes
-    )
+    Nomes)
 from ...utils import timer
 
 #
 # SQL procedures
 #
 use_sqlite = True if env.get('SQL_DRIVER', 'sqlite') == 'sqlite' else False
+
 
 def dummy(field, id_projeto, *args):
     return getattr(Custos, field)
@@ -90,7 +89,7 @@ class ProjetoQuery(Query):
         'IdPRONAC': Projeto.IdPRONAC,
         'ano_projeto': Projeto.AnoProjeto,
 
-        ## Pre-projeto
+        # Pre-projeto
         'acessibilidade': PreProjeto.Acessibilidade,
         'objetivos': PreProjeto.Objetivos,
         'justificativa': PreProjeto.Justificativa,
@@ -103,41 +102,41 @@ class ProjetoQuery(Query):
         'especificacao_tecnica': PreProjeto.EspecificacaoTecnica,
         'estrategia_execucao': PreProjeto.EstrategiadeExecucao,
 
-        ## Interessado
+        # Interessado
         'municipio': Interessado.Cidade,
         'proponente': Interessado.Nome,
         'cgccpf': Interessado.CgcCpf,
 
-        ## Info
+        # Info
         'area': Area.Descricao,
         'segmento': Segmento.Descricao,
         'situacao': Situacao.Descricao,
         'mecanismo': Mecanismo.Descricao,
 
-        ## Derived info
+        # Derived info
         'enquadramento': Enquadramento.enquadramento,
-        'valor_solicitado': valor_solicitado, #permission denied
-        'outras_fontes': outras_fontes, #permission denied
+        'valor_solicitado': valor_solicitado,
+        'outras_fontes': outras_fontes,
         'valor_captado': custo_projeto,
-        'valor_proposta': valor_proposta, #permission denied
-        'valor_aprovado': valor_aprovado, #permission denied
-        'valor_projeto': valor_projeto, #permission denied
-        # TODO When fix uncomment tests/examples.py lines 196, 203, 205, 206 and 207
+        'valor_proposta': valor_proposta,
+        'valor_aprovado': valor_aprovado,
+        'valor_projeto': valor_projeto,
     }
 
-    fields_already_filtered = {'data_inicio','data_termino'}
+    fields_already_filtered = {'data_inicio', 'data_termino'}
+
     #
     # Queries
     #
     def query(self, limit=1, offset=0, data_inicio=None, data_inicio_min=None,
-        data_inicio_max=None, data_termino=None, data_termino_min=None,
-        data_termino_max=None, **kwargs):
+            data_inicio_max=None, data_termino=None, data_termino_min=None,
+            data_termino_max=None, **kwargs):
 
         if(kwargs.get('PRONAC')):
-           self.check_pronac(kwargs.get('PRONAC'))
+            self.check_pronac(kwargs.get('PRONAC'))
 
         with timer('query projetos_list'):
-        # Prepare query
+            # Prepare query
             query = self.raw_query(*self.query_fields)
             query = (
                 query
@@ -146,16 +145,13 @@ class ProjetoQuery(Query):
                 .join(Area)
                 .join(Segmento)
                 .join(Situacao)
-                .join(Mecanismo,
-                    Mecanismo.Codigo == Projeto.Mecanismo)
+                .join(Mecanismo, Mecanismo.Codigo == Projeto.Mecanismo)
                 .outerjoin(Enquadramento,
-                    Enquadramento.IdPRONAC == Projeto.IdPRONAC)
-                )
+                           Enquadramento.IdPRONAC == Projeto.IdPRONAC))
 
             # For sqlite use
             if use_sqlite:
-                query = query.join(Custos,
-                        Custos.IdPRONAC == Projeto.IdPRONAC)
+                query = query.join(Custos, Custos.IdPRONAC == Projeto.IdPRONAC)
 
             # # Filter query by dates
             end_of_day = (lambda x: None if x is None else x + ' 23:59:59')
@@ -182,7 +178,7 @@ class ProjetoQuery(Query):
             }
             raise InvalidResult(result, status_code=404)
 
-   #  FIXME: using SQL procedure SAC.dbo.paDocumentos #permission denied
+    # FIXME: using SQL procedure SAC.dbo.paDocumentos #permission denied
     def attached_documents(self, pronac_id):
         if not use_sqlite:
             query = text('SAC.dbo.paDocumentos :idPronac')
@@ -200,7 +196,7 @@ class ProjetoQuery(Query):
             .join(Documento, Documento.idArquivo == Arquivo.idArquivo)
             .join(DocumentoProjeto, DocumentoProjeto.idDocumento == Documento.idDocumento)
             .join(Projeto, DocumentoProjeto.idPronac == Projeto.IdPRONAC)
-            .filter(DocumentoProjeto.idTipoDocumento==1, Projeto.IdPRONAC==idPronac)
+            .filter(DocumentoProjeto.idTipoDocumento == 1, Projeto.IdPRONAC == idPronac)
         )
 
         return self.execute_query(query, {'IdPRONAC': idPronac}).fetchall()
@@ -224,18 +220,18 @@ class ProjetoQuery(Query):
             query
             .select_from(Prorrogacao)
             .join(Usuarios, Prorrogacao.Logon == Usuarios.usu_codigo)
-            .filter(Prorrogacao.idPronac==idPronac)
+            .filter(Prorrogacao.idPronac == idPronac)
         )
 
         return self.execute_query(query, {'IdPRONAC': idPronac}).fetchall()
 
-    def payments_listing(self, limit=None, offset=None, **kwargs): #idPronac=None, cgccpf=None):
+    def payments_listing(self, limit=None, offset=None, **kwargs):
         query_fields = (
             PlanilhaItens.Descricao.label('nome'),
-            Comprovante.idComprovantePagamento. \
-                label('id_comprovante_pagamento'),
-            ComprovanteAprovacao.idPlanilhaAprovacao. \
-                label('id_planilha_aprovacao'),
+            Comprovante.idComprovantePagamento
+                        .label('id_comprovante_pagamento'),
+            ComprovanteAprovacao.idPlanilhaAprovacao
+                                .label('id_planilha_aprovacao'),
             Agentes.CNPJCPF.label('cgccpf'),
             Nomes.Descricao.label('nome_fornecedor'),
             Comprovante.DtPagamento.label('data_aprovacao'),
@@ -270,7 +266,7 @@ class ProjetoQuery(Query):
         query = query.select_from(ComprovanteAprovacao)
 
         query = (query
-                 .join(Comprovante,
+                .join(Comprovante,
                     ComprovanteAprovacao.idComprovantePagamento ==
                     Comprovante.idComprovantePagamento)
                 .outerjoin(PlanilhaAprovacao,
@@ -284,18 +280,16 @@ class ProjetoQuery(Query):
                 .outerjoin(Arquivo,
                     Arquivo.idArquivo == Comprovante.idArquivo)
                 .outerjoin(Agentes,
-                    Agentes.idAgente == Comprovante.idFornecedor)
-                )
+                    Agentes.idAgente == Comprovante.idFornecedor))
 
         if not kwargs.get('idPronac'):
             query = (query
                 .join(Projeto,
-                    Projeto.IdPRONAC ==  PlanilhaAprovacao.idPronac)
-                .filter(Agentes.CNPJCPF.like(kwargs.get('cgccpf')))
-                )
+                      Projeto.IdPRONAC == PlanilhaAprovacao.idPronac)
+                .filter(Agentes.CNPJCPF.like(kwargs.get('cgccpf'))))
         else:
             query = (query
-                .filter(PlanilhaAprovacao.idPronac==kwargs.get('idPronac')))
+                .filter(PlanilhaAprovacao.idPronac == kwargs.get('idPronac')))
 
         query = query.order_by(Comprovante.dtEmissao)
         if(limit):
@@ -320,12 +314,12 @@ class ProjetoQuery(Query):
             valor_programado.label('valor_programado'),
 
             case([(valor_programado == 0, 'NULL')],
-                else_ = func.round(func.sum(Comprovante.vlComprovacao) / valor_programado * 100, 2)
-            ).label('perc_executado'),
+                else_=func.round(func.sum(Comprovante.vlComprovacao) /
+                valor_programado * 100, 2)).label('perc_executado'),
 
             case([(valor_programado == 0, 'NULL')],
-                else_ = func.round(100 - (func.sum(Comprovante.vlComprovacao) / valor_programado * 100), 2)
-            ).label('perc_a_executar'),
+                else_=func.round(100 - (func.sum(Comprovante.vlComprovacao) /
+                valor_programado * 100), 2)).label('perc_a_executar'),
 
             func.sum(Comprovante.vlComprovacao).label('valor_executado')
         )
@@ -432,6 +426,7 @@ class SegmentoQuery(Query):
     def query(self):
         return self.select_as(Segmento, Descricao='nome', Codigo='codigo')
 
+
 class CertidoesNegativasQuery(Query):
     """
     Returns certificate's name and situation according to it's id
@@ -489,12 +484,12 @@ class DeslocamentoQuery(Query):
     Returns descriptions of places which the project may pass.
     """
     def query(self, IdPRONAC):  # noqa: N803
-        pais_origem = alias(Pais,name='pais_origem')
-        pais_destino = alias(Pais,name='pais_destino')
-        uf_origem = alias(UF,name='uf_origem')
-        uf_destino = alias(UF,name='uf_destino')
-        municipio_origem = alias(Municipios,name='municipios_origem')
-        municipio_destino = alias(Municipios,name='municipios_destino')
+        pais_origem = alias(Pais, name='pais_origem')
+        pais_destino = alias(Pais, name='pais_destino')
+        uf_origem = alias(UF, name='uf_origem')
+        uf_destino = alias(UF, name='uf_destino')
+        municipio_origem = alias(Municipios, name='municipios_origem')
+        municipio_destino = alias(Municipios, name='municipios_destino')
 
         query = self.raw_query(
             Deslocamento.idDeslocamento.label("id_deslocamento"),
@@ -511,16 +506,16 @@ class DeslocamentoQuery(Query):
         query = (
             query
             .select_from(Deslocamento)
-            .join(Projeto, Projeto.idProjeto==Deslocamento.idProjeto)
+            .join(Projeto, Projeto.idProjeto == Deslocamento.idProjeto)
 
-            .join(pais_origem, pais_origem.c.idPais==Deslocamento.idPaisOrigem)
-            .join(pais_destino, pais_destino.c.idPais==Deslocamento.idPaisDestino)
+            .join(pais_origem, pais_origem.c.idPais == Deslocamento.idPaisOrigem)
+            .join(pais_destino, pais_destino.c.idPais == Deslocamento.idPaisDestino)
 
-            .join(uf_origem, uf_origem.c.iduf==Deslocamento.idUFOrigem)
-            .join(uf_destino, uf_destino.c.iduf==Deslocamento.idUFDestino)
+            .join(uf_origem, uf_origem.c.iduf == Deslocamento.idUFOrigem)
+            .join(uf_destino, uf_destino.c.iduf == Deslocamento.idUFDestino)
 
-            .join(municipio_origem, municipio_origem.c.idMunicipioIBGE==Deslocamento.idMunicipioOrigem)
-            .join(municipio_destino, municipio_destino.c.idMunicipioIBGE==Deslocamento.idMunicipioDestino)
+            .join(municipio_origem, municipio_origem.c.idMunicipioIBGE == Deslocamento.idMunicipioOrigem)
+            .join(municipio_destino, municipio_destino.c.idMunicipioIBGE == Deslocamento.idMunicipioDestino)
 
             .filter(Projeto.IdPRONAC == IdPRONAC)
         )
@@ -588,19 +583,15 @@ class ReadequacaoQuery(Query):
             query
             .select_from(Readequacao)
             .join(TipoEncaminhamento,
-                Readequacao.siEncaminhamento ==
-                TipoEncaminhamento.idTipoEncaminhamento
-            )
+                  Readequacao.siEncaminhamento ==
+                  TipoEncaminhamento.idTipoEncaminhamento)
             .join(TipoReadequacao,
-                TipoReadequacao.idTipoReadequacao ==
-                Readequacao.idTipoReadequacao
-            )
+                  TipoReadequacao.idTipoReadequacao ==
+                  Readequacao.idTipoReadequacao)
             .outerjoin(Documento,
-                    Documento.idDocumento == Readequacao.idDocumento)
+                       Documento.idDocumento == Readequacao.idDocumento)
             .outerjoin(Arquivo, Arquivo.idArquivo == Documento.idArquivo)
             .filter(Readequacao.IdPRONAC == IdPRONAC)
-            .filter(Readequacao.siEncaminhamento != 12)
-        )
+            .filter(Readequacao.siEncaminhamento != 12))
 
         return query
-

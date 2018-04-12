@@ -3,7 +3,6 @@ import datetime
 import decimal
 import io
 import json
-import logging
 
 import dicttoxml
 

@@ -1,5 +1,5 @@
 from os import environ as env
-from sqlalchemy import Column, Date, DateTime, Integer, String, DATE, func, \
+from sqlalchemy import Date, DateTime, String, DATE, func, \
     VARCHAR
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -24,7 +24,8 @@ def table_name(name):
     else:
         return name
 
-def foreign_key(table,column):
+
+def foreign_key(table, column):
     return '{}.{}'.format(table.__tablename__, column)
 
 
@@ -41,19 +42,19 @@ class ComprovantePagamentoBase:  # noqa: N801
 
 
 class ArquivoBase:  # noqa: N801
-    __tablename__=table_name('BDCORPORATIVO.scCorp.tbArquivo')
+    __tablename__ = table_name('BDCORPORATIVO.scCorp.tbArquivo')
 
 
 class ArquivoImagemBase:
-    __tablename__=table_name('BDCORPORATIVO.scCorp.tbArquivoImagem')
+    __tablename__ = table_name('BDCORPORATIVO.scCorp.tbArquivoImagem')
 
 
 class DocumentoBase:
-    __tablename__=table_name('BDCORPORATIVO.scCorp.tbDocumento')
+    __tablename__ = table_name('BDCORPORATIVO.scCorp.tbDocumento')
 
 
 class DocumentoProjetoBase:
-    __tablename__=table_name('BDCORPORATIVO.scCorp.tbDocumentoProjeto')
+    __tablename__ = table_name('BDCORPORATIVO.scCorp.tbDocumentoProjeto')
 
 
 class NomesBase:

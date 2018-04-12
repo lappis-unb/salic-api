@@ -115,7 +115,7 @@ class SalicResource(Resource):
         """
         data = ', '.join(map(repr, valid_args))
         return InvalidResult({
-            'message': 'invalid request arguments: {}. Possible args: ({})'.format(invalid_args,data),
+            'message': 'invalid request arguments: {}. Possible args: ({})'.format(invalid_args, data),
             'message_code': 13,  # Is it?
         }, 500)
 
@@ -153,7 +153,7 @@ class SalicResource(Resource):
             Remove from the filter the columns that are a sum
             """
             return {query_fields[field]: built_args[field] for field in
-                filter_args if type(query_fields[field]) is not sql_sum}
+                    filter_args if type(query_fields[field]) is not sql_sum}
 
         filter_args = map_to_column(
             validate_fields(built_args.keys() - self.filter_likeable_fields)
@@ -238,7 +238,7 @@ class SalicResource(Resource):
         valid_args = self.request_args | query_fields
 
         if not valid_args.issuperset(argset):
-            raise self.invalid_request_args_error(sorted(valid_args), sorted(argset-query_fields))
+            raise self.invalid_request_args_error(sorted(valid_args), sorted(argset - query_fields))
         args = {k: v for k, v in request.args.items()}
         return dict(kwargs, **args)
 
@@ -324,7 +324,7 @@ class SalicResource(Resource):
                 for testing.
         """
         if not raw:
-            if isinstance(self,ListResource):
+            if isinstance(self, ListResource):
                 columns = self.detail_resource_class.csv_columns
                 data = data['_embedded'][self.embedding_field]
             else:
@@ -734,4 +734,3 @@ class InvalidResult(Exception):
         """
         payload, status_code = self.args
         return resource.render(payload, status_code=status_code)
-

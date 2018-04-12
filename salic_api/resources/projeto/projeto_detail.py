@@ -5,7 +5,7 @@ from .query import (
     DistribuicaoQuery, ReadequacaoQuery, CaptacaoQuery, use_sqlite
 )
 from ..format_utils import cgccpf_mask
-from ..resource import DetailResource, InvalidResult
+from ..resource import DetailResource
 from ..serialization import listify_queryset
 from ...utils import encrypt
 
@@ -59,9 +59,10 @@ class ProjetoDetail(DetailResource):
                    'resumo', 'outras_fontes', 'municipio', 'valor_aprovado',
                    'valor_proposta', 'ano_projeto', 'area', 'code', 'message',
                    ]
-    strip_html_fields = {'objetivos','etapa','acessibilidade',
-    'justificativa','democratizacao','ficha_tecnica', 'impacto_ambiental',
-    'sinopse','especificacao_tecnica','estrategia_execucao'}
+    strip_html_fields = {
+        'objetivos', 'etapa', 'acessibilidade',
+        'justificativa', 'democratizacao', 'ficha_tecnica', 'impacto_ambiental',
+        'sinopse', 'especificacao_tecnica', 'estrategia_execucao'}
 
     pronac = property(lambda self: self.args['PRONAC'])
 
@@ -88,10 +89,9 @@ class ProjetoDetail(DetailResource):
             'readequacoes',
             'relacao_bens_captal',
             'relatorio_fisco',
-            'relacao_pagamentos',
-            ]
+            'relacao_pagamentos']
         return {field: data.pop(field) for field in fields
-                                       if field in data.keys()}
+                if field in data.keys()}
 
     def prepare_result(self, result):
         result.pop('IdPRONAC')
@@ -116,57 +116,57 @@ class ProjetoDetail(DetailResource):
     def insert_related(self, projeto):
         pronac = self.pronac
 
-        ## Certidões
+        # Certidões
         certidoes_negativas = CertidoesNegativasQuery().query(pronac)
         projeto['certidoes_negativas'] = listify_queryset(certidoes_negativas)
 
         documentos = []
         marcas = []
-        if use_sqlite: #TODO remove this conditional when in production
-            documentos =  ProjetoQuery().attached_documents(pronac)
+        if use_sqlite:  # TODO remove this conditional when in production
+            documentos = ProjetoQuery().attached_documents(pronac)
             marcas = ProjetoQuery().attached_brands(pronac)
 
-        ## Documentos anexados
+        # Documentos anexados
         projeto['documentos_anexados'] = self.cleaned_documentos(documentos)
 
-        ## Marcas anexadas
+        # Marcas anexadas
         projeto['marcas_anexadas'] = marcas = listify_queryset(marcas)
         for marca in marcas:
             marca['link'] = utils.build_brand_link(marca)
 
-        ## Divulgação
+        # Divulgação
         divulgacao = DivulgacaoQuery().query(pronac)
         projeto['divulgacao'] = listify_queryset(divulgacao)
 
-        ## Deslocamentos
+        # Deslocamentos
         deslocamentos = DeslocamentoQuery().query(pronac)
         projeto['deslocamento'] = self.cleaned_deslocamentos(deslocamentos)
 
-        ## Distribuições
+        # Distribuições
         distribuicoes = DistribuicaoQuery().query(pronac)
         projeto['distribuicao'] = self.cleaned_distribuicoes(distribuicoes)
 
-        ## Readequações
+        # Readequações
         readequacoes = ReadequacaoQuery().query(pronac)
         projeto['readequacoes'] = self.cleaned_readequacoes(readequacoes)
 
-        ## Prorrogação
+        # Prorrogação
         prorrogacao = ProjetoQuery().postpone_request(pronac)
         projeto['prorrogacao'] = listify_queryset(prorrogacao)
 
-        ## Relação de pagamentos
+        # Relação de pagamentos
         pagamentos = ProjetoQuery().payments_listing(idPronac=pronac)
         projeto['relacao_pagamentos'] = listify_queryset(pagamentos)
 
-        ## Relatório fisco
+        # Relatório fisco
         relatorio_fisco = ProjetoQuery().taxing_report(pronac)
         projeto['relatorio_fisco'] = listify_queryset(relatorio_fisco)
 
-        ## Relação de bens de capital
+        # Relação de bens de capital
         capital_goods = ProjetoQuery().goods_capital_listing(pronac)
         projeto['relacao_bens_captal'] = listify_queryset(capital_goods)
 
-        ## Captações
+        # Captações
         captacoes = CaptacaoQuery().query(PRONAC=pronac)
         projeto['captacoes'] = listify_queryset(captacoes)
 

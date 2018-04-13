@@ -76,13 +76,32 @@ Não esqueça de rodar os testes com frequência::
 Docker
 ------
 
-A implantação será feita em Docker. Para testar o ambiente de homologação execute
-dentro do diretório do salic-api::
+Para executar o ambiente utilizando o Docker execute os seguintes comandos::
 
     $ docker build -t salic-api .
     $ docker run -it --name salic-api -p 5000:5000 -v $PWD:/app salic-api
 
+Para executar os testes com o docker execute o seguinte comando::
 
+    $ docker run -it --name salic-api -p 5000:5000 -v $PWD:/app salic-api inv test
+
+Docker Compose
+--------------
+
+O sistema possui dois docker-compose, um para o ambiente de desenvolvimento e
+outro para o ambiente de produção, para escolher qual docker compose usar
+passe o arquivo docker-compose.dev.yml ou docker-compose.prod.yml na flag '-f'
+no comando docker-compose, como no exemplo a seguir::
+
+    $ docker-compose -f docker-compose.dev.yml
+    ou
+    $ docker-compose -f docker-compose.prod.yml
+
+Para executar o ambiente utilizando o docker-compose execute os seguintes
+comandos::
+
+    $ docker-compose -f [docker-compose file] build
+    $ docker-compose -f [docker-compose file] up
 
 Dependências básicas
 --------------------

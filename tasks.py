@@ -22,7 +22,7 @@ def test(ctx, production=False):
     Run tests.
     """
 
-    test_command = 'pytest -vv --maxfail=20 '
+    test_command = 'pytest --cov -vv --maxfail=20 '
 
     if production:
         ctx.run(test_command + 'tests/production/')

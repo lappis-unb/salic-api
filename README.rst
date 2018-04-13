@@ -71,7 +71,7 @@ Inicialize o banco de desenvolvimento antes de rodar a aplicação::
 
 Não esqueça de rodar os testes com frequência::
 
-    $ pytest --cov
+    $ inv test
 
 Docker
 ------

@@ -76,13 +76,44 @@ Não esqueça de rodar os testes com frequência::
 Docker
 ------
 
-A implantação será feita em Docker. Para testar o ambiente de homologação execute
-dentro do diretório do salic-api::
+Para gerar a build do sistema execute o seguinte comando::
 
     $ docker build -t salic-api .
+
+Para executar o ambiente execute os seguintes comandos::
+
     $ docker run -it --name salic-api -p 5000:5000 -v $PWD:/app salic-api
 
+Para executar os testes com o docker execute o seguinte comando::
 
+    $ docker run -it --name salic-api -p 5000:5000 -v $PWD:/app salic-api inv test
+
+Docker Compose
+--------------
+
+O sistema possui dois docker-compose, um para o ambiente de desenvolvimento e
+outro para o ambiente de produção, para escolher qual docker compose usar
+passe o arquivo docker-compose.dev.yml ou docker-compose.prod.yml na flag '-f'
+no comando docker-compose, como no exemplo a seguir::
+
+    $ docker-compose -f docker-compose.dev.yml
+    ou
+    $ docker-compose -f docker-compose.prod.yml
+
+Para gerar a build do sistema execute o seguinte comando::
+
+    $ docker-compose -f [docker-compose file] build
+
+Para executar o ambiente execute os seguintes comandos::
+
+    $ docker-compose -f [docker-compose file] up
+
+Para executar os testes com o docker execute o comando abaixo, esse comando
+funciona apenas com o docker-compose do ambiente de desenvolvimento, ou seja
+antes de rodar esse comando certifique-se de ter gerado a build do ambiente
+de desenvolvimento::
+
+    $ docker-compose -f docker-compose.dev.yml run --rm gunicorn inv test
 
 Dependências básicas
 --------------------

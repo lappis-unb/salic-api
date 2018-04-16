@@ -15,9 +15,6 @@ if use_sqlite:
 else:
     date_column = (lambda x: func.cast(x, DATE))
 
-
-# FIXME put right columns when given access to this table
-
 def table_name(name):
     if use_sqlite:
         return name.rpartition('.')[-1]

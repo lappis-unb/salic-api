@@ -170,10 +170,6 @@ class ProjetoDetail(DetailResource):
         captacoes = CaptacaoQuery().query(PRONAC=pronac)
         projeto['captacoes'] = listify_queryset(captacoes)
 
-    # FIXME: @current_app.cache.cached(timeout=current_app.config['GLOBAL_CACHE_TIMEOUT'])
-    # def get(self, PRONAC):
-    #     return super().get(PRONAC=PRONAC)
-
     def cleaned_deslocamentos(self, deslocamentos):
         deslocamentos = listify_queryset(deslocamentos)
         return list(map(map_keys(DESLOCAMENTOS_KEY_MAP), deslocamentos))

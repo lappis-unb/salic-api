@@ -9,9 +9,10 @@ from flask_restful import Resource
 from sqlalchemy.sql.functions import sum as sql_sum
 from sqlalchemy import desc
 
-from .query import filter_query, filter_query_like
+from .error_messages import *
 from .serialization import serialize, listify_queryset
 from ..utils import md5hash, MLStripper
+from ..query_helpers import *
 
 log = logging.getLogger('salic-api')
 DEBUG = os.environ.get('DEBUG', 'false').lower() == 'true'
@@ -54,128 +55,11 @@ class SalicResource(Resource):
     filter_likeable_fields = {}
     transform_args = {}
 
-    # Pre-defined error messages
-    INTERNAL_ERROR = {
-        'message': 'internal error',
-        'code': 13,
-    }
-    INVALID_FORMAT = {
-        'message': 'invalid format',
-        'code': 55,
-    }
-    MAX_LIMIT_PAGING_ERROR = {
-        'message': 'Max limit paging exceeded',
-        'message_code': 7,
-    }
-    INVALID_LIMIT_PAGING_ERROR = {
-        'message': 'limit must be an integer',
-        'message_code': 7,
-    }
-    INVALID_OFFSET_PAGING_ERROR = {
-        'message': 'limit must be an integer',
-        'message_code': 7,
-    }
-
     def __init__(self, query_data=None):
         init_config()
         self.query_data = query_data
         self.url_args = {}
         self.args = {}
-
-    #
-    # Error factories
-    #
-    def internal_error(self, status_code=500):
-        """
-        Default 500 internal error.
-        """
-        log.info('invalid request (%s, code=13)' % status_code)
-        return InvalidResult(self.INTERNAL_ERROR, status_code)
-
-    def max_limit_paging_error(self, status_code=405):
-        """
-        Raised when paging limit is greater than maximum.
-        """
-        log.info('limit greater than maximum (%s, code=7)' % status_code)
-        return InvalidResult(self.MAX_LIMIT_PAGING_ERROR, status_code)
-
-    def resource_not_found_error(self):
-        """
-        Raised when requested object is not found on the databaser.
-        """
-        type_name = self.query_class.__name__[:-5]
-        return InvalidResult({
-            'message': '%r not found at %s' % (type_name, request.base_url),
-            'message_code': 11
-        }, 404)
-
-    def invalid_request_args_error(self, valid_args, invalid_args):
-        """
-        Raised when user make a request with invalid arguments.
-        """
-        data = ', '.join(map(repr, valid_args))
-        return InvalidResult({
-            'message': 'invalid request arguments: {}. Possible args: ({})'.format(invalid_args, data),
-            'message_code': 13,  # Is it?
-        }, 500)
-
-    def empty_query_error(self):
-        """
-        Raised when query return no value.
-        """
-        results = {
-            'message': 'No object was found with your criteria',
-            'message_code': 11
-        }
-        return InvalidResult(results, 404)
-
-    def filter_query(self, query):
-        """
-        Filter query according to the filtering arguments.
-        """
-        self.transform_args_values()
-        built_args = self.build_query_args()
-        query_fields = self.query_class.labels_to_fields
-
-        def validate_fields(fields_in):
-            """
-            Take the intersection between the fields requested and the
-            query_fields. Do not keep the fields that already have a more
-            complex filter on query.
-            Eg. {name, email, etc} & {name} -> {name}
-            """
-
-            return (set(query_fields) & set(fields_in)) - set(self.query_class.fields_already_filtered)
-
-        def map_to_column(filter_args):
-            """
-            Map each filter with a Column name and args value to the query
-            Remove from the filter the columns that are a sum
-            """
-            return {query_fields[field]: built_args[field] for field in
-                    filter_args if type(query_fields[field]) is not sql_sum}
-
-        filter_args = map_to_column(
-            validate_fields(built_args.keys() - self.filter_likeable_fields)
-        )
-
-        filter_args_like = map_to_column(
-            validate_fields(built_args.keys() & self.filter_likeable_fields)
-        )
-
-        query = filter_query(query, filter_args)
-        query = filter_query_like(query, filter_args_like)
-
-        return query
-
-    def transform_args_values(self):
-        """
-        Transform args values from human readable to db values
-        Eg. tipo_pessoa=fisica -> tipo_pessoa=1
-        """
-        for key in self.args.keys():
-            if key in self.transform_args.keys():
-                self.args[key] = self.transform_args[key][self.args[key]]
 
     #
     # HAL links
@@ -229,19 +113,6 @@ class SalicResource(Resource):
         else:
             return n_records - (n_records % limit)
 
-    def prepare_args(self, kwargs):
-        """
-        Inject all request arguments to the dictionary of arguments.
-        """
-        argset = set(request.args)
-        query_fields = set(self.query_class.labels_to_fields)
-        valid_args = self.request_args | query_fields
-
-        if not valid_args.issuperset(argset):
-            raise self.invalid_request_args_error(sorted(valid_args), sorted(argset - query_fields))
-        args = {k: v for k, v in request.args.items()}
-        return dict(kwargs, **args)
-
     #
     # Creating response
     #
@@ -251,8 +122,13 @@ class SalicResource(Resource):
         """
         try:
             self.url_args.update(kwargs)
-            self.args.update(self.prepare_args(kwargs))
-
+            self.args.update(
+                prepare_args(
+                    kwargs,
+                    self.query_class.labels_to_fields,
+                    self.request_args,
+                )
+            )
             data = self.fetch_result()
             return self.render(data)
 
@@ -268,7 +144,7 @@ class SalicResource(Resource):
                 raise
             fmt = (type(self).__name__, type(ex).__name__, ex)
             log.error('%s: unhandled exception, %s: %s' % fmt)
-            return self.internal_error().render(self)
+            return internal_error().render(self)
 
     def fetch_result(self):
         """
@@ -293,7 +169,14 @@ class SalicResource(Resource):
 
         query_args = self.build_query_args()
         data = self.query_data = self.query_class().query(**query_args)
-        return data
+        query = apply_filters(
+            data,
+            self.query_class,
+            self.filter_likeable_fields,
+            query_args,
+            self.transform_args
+        )
+        return query
 
     def build_query_args(self):
         """
@@ -371,7 +254,7 @@ class SalicResource(Resource):
         headers = {} if headers is None else headers
 
         if content_type is None:
-            raise InvalidResult(self.INVALID_FORMAT, 405)
+            raise InvalidResult(INVALID_FORMAT, 405)
 
         if content_type == 'xml':
             if not raw:
@@ -452,7 +335,7 @@ class ListResource(SalicResource):
         try:
             limit = int(self.args.get('limit', current_app.config['LIMIT_PAGING']))
         except ValueError as error:
-            raise InvalidResult(self.INVALID_LIMIT_PAGING_ERROR, 500)
+            raise InvalidResult(INVALID_LIMIT_PAGING_ERROR, 500)
         return limit
 
     @property
@@ -460,7 +343,7 @@ class ListResource(SalicResource):
         try:
             offset = int(self.args.get('offset', 0))
         except ValueError as error:
-            raise InvalidResult(self.INVALID_OFFSET_PAGING_ERROR, 500)
+            raise InvalidResult(INVALID_OFFSET_PAGING_ERROR, 500)
         return offset
 
     @property
@@ -504,7 +387,7 @@ class ListResource(SalicResource):
         offset = offset or 0
         pages = total // limit
         if limit > current_app.config['LIMIT_PAGING']:
-            raise self.max_limit_paging_error()
+            raise max_limit_paging_error()
 
         def link(offset):
             return '%s/?limit=%d&offset=%d' % (base, limit, offset)
@@ -522,38 +405,23 @@ class ListResource(SalicResource):
         results and the number of elements in the complete queryset.
         """
         query = super().query_db()
-        query = self.filter_query(query)
-        query = self.sort_query(query)
+        query = sort_query(
+            query,
+            self.sort_field,
+            self.sort_fields,
+            self.sort_order,
+            self.default_sort_field,
+            self.query_class().labels_to_fields
+        )
 
         self.queryset_size = query.count()
         limited_query = query.limit(self.limit).offset(self.offset)
         return listify_queryset(limited_query)
 
-    def sort_query(self, query):
-        """
-        Sort query according to sorting arguments.
-        """
-
-        if self.sort_field in self.sort_fields:
-            field = self.sort_field
-        else:
-            field = self.default_sort_field
-
-        if not field:
-            return query
-
-        field = self.query_class().labels_to_fields[field]
-
-        if self.sort_order == 'desc':
-            query = query.order_by(desc(field))
-        else:
-            query = query.order_by(field)
-        return query
-
     def fetch_result(self):
         items = self.query_db()
         if len(items) == 0:
-            raise self.empty_query_error()
+            raise empty_query_error()
         for item in items:
             self.prepare_item(item)
 
@@ -628,13 +496,12 @@ class DetailResource(SalicResource):
         return {}
 
     def query_db(self):
-        query = super().query_db()
-        query = self.filter_query(query).limit(1)
+        query = super().query_db().limit(1)
         query = listify_queryset(query)
         if len(query) == 1:
             obj, = query
         else:
-            raise self.resource_not_found_error()
+            raise resource_not_found_error(self.query_class.__name__[:-5], request.base_url)
         return obj
 
     def fetch_result(self):
@@ -719,18 +586,3 @@ def init_config():
 
         APP_CONFIGURED = True
 
-
-class InvalidResult(Exception):
-    """
-    Exception raised for invalid errors
-    """
-
-    def __init__(self, message, status_code=500):
-        super().__init__(message, status_code)
-
-    def render(self, resource):
-        """
-        Render error message using the supplied resource renderer.
-        """
-        payload, status_code = self.args
-        return resource.render(payload, status_code=status_code)

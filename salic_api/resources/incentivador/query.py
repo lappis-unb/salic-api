@@ -1,12 +1,10 @@
 from sqlalchemy import func
-
 from ..query import Query
 from ...models import Interessado, Projeto, Captacao
 from ...utils import pc_quote
 
 
 class IncentivadorQuery(Query):
-
     group_by_fields = (
         Interessado.Nome,
         Interessado.Cidade,
@@ -48,7 +46,7 @@ class DoacaoQuery(Query):
         'nome_doador': Interessado.Nome,
     }
 
-    def query(self, cgccpf, limit=100, offset=0, **kwargs):
+    def query(self, limit=100, offset=0, **kwargs):
         query = (
             self.raw_query(*self.query_fields)
             .join(Projeto, Captacao.PRONAC == Projeto.PRONAC)

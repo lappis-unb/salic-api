@@ -16,7 +16,7 @@ class FornecedorQuery(Query):
         'email': Internet.Descricao,
     }
 
-    def query(self, limit=1, offset=0, cgccpf=None, PRONAC=None, nome=None):
+    def query(self, limit=1, offset=0, **kwargs):
         query = self.raw_query(*self.query_fields)
         query = query.select_from(ComprovanteAprovacao).distinct()
         query = (query
@@ -45,17 +45,14 @@ class FornecedorQuery(Query):
         query = query.join(Projeto,
                            PlanilhaAprovacao.idPronac == Projeto.IdPRONAC)
 
-        if PRONAC is not None:
+        if (kwargs.get('PRONAC')):
             query = query.filter((Projeto.AnoProjeto + Projeto.Sequencial)
-                                 .like(PRONAC))
+                                 .like(kwargs.get('PRONAC')))
 
         return query
 
 
 class ProductQuery(Query):
-    """
-
-    """
     labels_to_fields = {
         'nome': PlanilhaItens.Descricao,
         'id_comprovante_pagamento': Comprovante.idComprovantePagamento,
@@ -75,7 +72,7 @@ class ProductQuery(Query):
         'nm_arquivo': Arquivo.nmArquivo,
     }
 
-    def query(self, cgccpf, limit=100, offset=0):
+    def query(self, limit=100, offset=0, **kwargs):
         query = self.raw_query(*self.query_fields)
 
         query = query.select_from(ComprovanteAprovacao)
@@ -94,7 +91,9 @@ class ProductQuery(Query):
                  .outerjoin(Projeto,
                             PlanilhaAprovacao.idPronac == Projeto.IdPRONAC)
                  .outerjoin(Agentes,
-                            Comprovante.idFornecedor == Agentes.idAgente)
-                 .filter(Agentes.CNPJCPF.like(cgccpf)))
+                            Comprovante.idFornecedor == Agentes.idAgente))
+
+        if(kwargs.get('cgccpf')):
+            query = query.filter(Agentes.CNPJCPF.like(kwargs.get('cgccpf')))
 
         return query

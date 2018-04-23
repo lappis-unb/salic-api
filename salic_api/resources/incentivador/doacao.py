@@ -24,7 +24,7 @@ class DoacaoList(ListResource):
     detail_resource_class = DoacaoDetail
     detail_pk = 'cgccpf'
     request_args = {'incentivador_id', 'limit', 'offset', 'format'}
-    sort_fields = {'data_recibo', 'valor'}
+    sort_fields = {'data_recibo', 'valor', 'nome_projeto', 'cgccpf', 'nome_doador', 'PRONAC'}
     default_sort_field = 'valor'
     filter_likeable_fields = {'nome_doador'}
 

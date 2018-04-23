@@ -3,6 +3,7 @@ import os
 from flask import redirect, send_from_directory
 from flask_cors import CORS
 from flask_restful import Api
+from flask_graphql import GraphQLView
 
 from ..resources.fornecedor.fornecedor_detail import FornecedorDetail
 from ..resources.fornecedor.fornecedor_list import FornecedorList
@@ -20,11 +21,13 @@ from ..resources.projeto.segmento import Segmento
 from ..resources.proponente.proponente_detail import ProponenteDetail
 from ..resources.proponente.proponente_list import ProponenteList
 from ..resources.test_resource import TestResource
+from ..salic_graphql.schema import schema
 
 dirname = os.path.dirname
 BASE_PATH = dirname(dirname(__file__))
 STATIC_URL_PATH = os.path.join(BASE_PATH, 'static')
 SWAGGER_DEF = 'swagger_specification_PT-BR.json'
+
 
 
 def make_urls(app=None):
@@ -42,8 +45,7 @@ def make_urls(app=None):
 
     def register(resource, url):
         url = url.strip('/')
-        api.add_resource(resource,
-                         '/%s/%s' % (base_version, url),
+        api.add_resource(resource, '/%s/%s' % (base_version, url),
                          '/%s/%s/' % (base_version, url))
 
     register(ProjetoDetail, 'projetos/<string:PRONAC>/')
@@ -61,6 +63,17 @@ def make_urls(app=None):
     register(FornecedorList, 'fornecedores/')
     register(FornecedorDetail, 'fornecedores/<string:fornecedor_id>/')
     register(Produto, 'fornecedores/<string:fornecedor_id>/produtos/')
+    #register(
+    #    GraphQLView.as_view('graphql', schema=schema, graphiql=True),
+    #    'graphql/')
+
+    app.add_url_rule(
+        '/graphql',
+        view_func=GraphQLView.as_view(
+            'graphql',
+            schema=schema,
+            # graphiql=True  # uncomment for having the GraphiQL interface
+        ))
 
     @app.route('/')
     def index():

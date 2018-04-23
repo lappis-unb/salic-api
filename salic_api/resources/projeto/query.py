@@ -199,7 +199,7 @@ class ProjetoQuery(Query):
             .filter(DocumentoProjeto.idTipoDocumento == 1, Projeto.IdPRONAC == idPronac)
         )
 
-        return self.execute_query(query, {'IdPRONAC': idPronac}).fetchall()
+        return query
 
     def postpone_request(self, idPronac):  # noqa: N804
         query = self.raw_query(
@@ -223,7 +223,7 @@ class ProjetoQuery(Query):
             .filter(Prorrogacao.idPronac == idPronac)
         )
 
-        return self.execute_query(query, {'IdPRONAC': idPronac}).fetchall()
+        return query
 
     def payments_listing(self, limit=None, offset=None, **kwargs):
         query_fields = (
@@ -297,7 +297,7 @@ class ProjetoQuery(Query):
         if(offset):
             query = query.offset(offset)
 
-        return self.execute_query(query).fetchall()
+        return query
 
     def taxing_report(self, idPronac):  # noqa: N803
         # Relatório fisco
@@ -448,14 +448,19 @@ class CertidoesNegativasQuery(Query):
             else_='Não Pendente'
         )
 
-    def query(self, PRONAC=None, CgcCpf=None):  # noqa: N803
+    def query(self, **kwargs):  # noqa: N803
         query = self.raw_query(
             CertidoesNegativas.data_emissao.label('data_emissao'),
             CertidoesNegativas.data_validade.label('data_validade'),
             self.descricao.label('descricao'),
             self.situacao.label('situacao'),
         )
-        return filter_query(query, {CertidoesNegativas.PRONAC: PRONAC})
+
+        if kwargs.get('PRONAC'):
+            PRONAC = kwargs.get('PRONAC')
+            query = query.filter(CertidoesNegativas.PRONAC == PRONAC)
+
+        return query
 
 
 class DivulgacaoQuery(Query):
@@ -463,18 +468,21 @@ class DivulgacaoQuery(Query):
     Returns instrument of propagation and its type. Ex: Peça - CARTAZ/POSTER,
     Veiculo - IMPRESSOS
     """
-    def query(self, IdPRONAC):
+    def query(self, PRONAC):
+        verificacao_peca = alias(Verificacao, name='verificacao_peca')
+        verificacao_veiculo = alias(Verificacao, name='verificacao_veiculo')
+
         query = (self.raw_query(
-            Verificacao.Descricao.label('peca'),
-            Verificacao.Descricao.label('veiculo'),
-        ).select_from(PlanoDivulgacao)
-         .join(Projeto, Projeto.idProjeto == PlanoDivulgacao.idProjeto)
-         .join(Verificacao,
-               Verificacao.idVerificacao == PlanoDivulgacao.idPeca or
-               Verificacao.idVerificacao == PlanoDivulgacao.idVeiculo)
-         .filter(and_(Projeto.IdPRONAC == IdPRONAC,
-                      PlanoDivulgacao.stPlanoDivulgacao == 1))
-        )
+            verificacao_peca.c.Descricao.label('peca'),
+            verificacao_veiculo.c.Descricao.label('veiculo'))
+        .select_from(PlanoDivulgacao)
+        .join(Projeto, Projeto.idProjeto == PlanoDivulgacao.idProjeto)
+        .join(verificacao_peca,
+              verificacao_peca.c.idVerificacao == PlanoDivulgacao.idPeca)
+        .join(verificacao_veiculo,
+              verificacao_veiculo.c.idVerificacao == PlanoDivulgacao.idVeiculo)
+        .filter(and_(Projeto.PRONAC == PRONAC,
+                PlanoDivulgacao.stPlanoDivulgacao == 1)))
 
         return query
 
@@ -483,7 +491,7 @@ class DeslocamentoQuery(Query):
     """
     Returns descriptions of places which the project may pass.
     """
-    def query(self, IdPRONAC):  # noqa: N803
+    def query(self, PRONAC):  # noqa: N803
         pais_origem = alias(Pais, name='pais_origem')
         pais_destino = alias(Pais, name='pais_destino')
         uf_origem = alias(UF, name='uf_origem')
@@ -517,17 +525,17 @@ class DeslocamentoQuery(Query):
             .join(municipio_origem, municipio_origem.c.idMunicipioIBGE == Deslocamento.idMunicipioOrigem)
             .join(municipio_destino, municipio_destino.c.idMunicipioIBGE == Deslocamento.idMunicipioDestino)
 
-            .filter(Projeto.IdPRONAC == IdPRONAC)
+            .filter(Projeto.PRONAC == PRONAC)
         )
 
-        return self.execute_query(query, {'IdPRONAC': IdPRONAC}).fetchall()
+        return self.execute_query(query, {'PRONAC': PRONAC}).fetchall()
 
 
 class DistribuicaoQuery(Query):
     """
     Returns information of how the project will be distributed. Ex: ticket prices...
     """
-    def query(self, IdPRONAC):  # noqa: N803
+    def query(self, PRONAC):  # noqa: N803
         return (
             self.raw_query(
                 PlanoDistribuicao.idPlanoDistribuicao.label('idPlanoDistribuicao'),
@@ -550,15 +558,12 @@ class DistribuicaoQuery(Query):
             .join(Area, Area.Codigo == PlanoDistribuicao.Area)
             .join(Segmento, Segmento.Codigo == PlanoDistribuicao.Segmento)
             .join(Verificacao)
-            .filter(and_(Projeto.IdPRONAC == IdPRONAC,
-                         PlanoDistribuicao.stPlanoDistribuicaoProduto == 0))
+            .filter(and_(Projeto.PRONAC == PRONAC,
+                         PlanoDistribuicao.stPlanoDistribuicaoProduto == 1))
         )
 
 
 class ReadequacaoQuery(Query):
-    """
-
-    """
     def query(self, IdPRONAC):  # noqa: N803
         query = self.raw_query(
             Readequacao.idReadequacao.label("id_readequacao"),

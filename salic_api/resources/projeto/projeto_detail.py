@@ -4,6 +4,7 @@ from .query import (
     ProjetoQuery, CertidoesNegativasQuery, DivulgacaoQuery, DeslocamentoQuery,
     DistribuicaoQuery, ReadequacaoQuery, CaptacaoQuery, use_sqlite
 )
+from ..query import Query
 from ..format_utils import cgccpf_mask
 from ..resource import DetailResource
 from ..serialization import listify_queryset
@@ -117,14 +118,15 @@ class ProjetoDetail(DetailResource):
         pronac = self.pronac
 
         # Certidões
-        certidoes_negativas = CertidoesNegativasQuery().query(pronac)
+        certidoes_negativas = CertidoesNegativasQuery().query(PRONAC=pronac)
         projeto['certidoes_negativas'] = listify_queryset(certidoes_negativas)
 
         documentos = []
         marcas = []
         if use_sqlite:  # TODO remove this conditional when in production
             documentos = ProjetoQuery().attached_documents(pronac)
-            marcas = ProjetoQuery().attached_brands(pronac)
+            marcas_query = ProjetoQuery().attached_brands(pronac)
+            marcas = Query().execute_query(marcas_query, {'IdPRONAC': projeto['IdPRONAC']}).fetchall()
 
         # Documentos anexados
         projeto['documentos_anexados'] = self.cleaned_documentos(documentos)
@@ -147,19 +149,22 @@ class ProjetoDetail(DetailResource):
         projeto['distribuicao'] = self.cleaned_distribuicoes(distribuicoes)
 
         # Readequações
-        readequacoes = ReadequacaoQuery().query(pronac)
+        readequacoes = ReadequacaoQuery().query(projeto['IdPRONAC'])
         projeto['readequacoes'] = self.cleaned_readequacoes(readequacoes)
 
         # Prorrogação
-        prorrogacao = ProjetoQuery().postpone_request(pronac)
+        prorrogacao = Query().execute_query(
+            ProjetoQuery().postpone_request(projeto['IdPRONAC'])).fetchall()
         projeto['prorrogacao'] = listify_queryset(prorrogacao)
 
         # Relação de pagamentos
-        pagamentos = ProjetoQuery().payments_listing(idPronac=pronac)
+        pagamentos_query = ProjetoQuery().payments_listing(
+            idPronac=projeto['IdPRONAC'])
+        pagamentos = Query().execute_query(pagamentos_query).fetchall()
         projeto['relacao_pagamentos'] = listify_queryset(pagamentos)
 
         # Relatório fisco
-        relatorio_fisco = ProjetoQuery().taxing_report(pronac)
+        relatorio_fisco = ProjetoQuery().taxing_report(projeto['IdPRONAC'])
         projeto['relatorio_fisco'] = listify_queryset(relatorio_fisco)
 
         # Relação de bens de capital

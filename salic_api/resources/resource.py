@@ -4,7 +4,7 @@ import os
 from flask import Response
 from flask import current_app
 from flask import request
-from flask_cache import Cache
+from flask_caching import Cache
 from flask_restful import Resource
 from sqlalchemy.sql.functions import sum as sql_sum
 from sqlalchemy import desc

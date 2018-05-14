@@ -137,7 +137,7 @@ class IncentivadorType(CommonFields, graphene.ObjectType, Resolvers):
     UF = graphene.String()
     responsavel = graphene.String()
     cgccpf = graphene.String()
-    total_doado = graphene.String()
+    total_doado = graphene.Float()
     tipo_pessoa = graphene.String()
 
     doacoes = graphene.List(DoacaoType, **DoacaoType.fields())

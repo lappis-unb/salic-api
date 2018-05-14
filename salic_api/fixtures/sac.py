@@ -137,7 +137,7 @@ def plano_distribuicao_example(size=1):
                               QtdePatrocinador=0, QtdeOutros=0,
                               QtdeVendaNormal=0, QtdeVendaPromocional=0,
                               QtdeUnitarioNormal=0, QtdeUnitarioPromocional=0,
-                              stPlanoDistribuicaoProduto=False)
+                              stPlanoDistribuicaoProduto=True)
             for i in range(1, size + 1)]
 
 

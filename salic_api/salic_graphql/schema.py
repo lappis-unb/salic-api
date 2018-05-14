@@ -10,4 +10,4 @@ class RootQuery(IncentivadorGQLQuery, DoacaoGQLQuery, ProponenteGQLQuery,
     pass
 
 
-schema = graphene.Schema(query=RootQuery)
+schema = graphene.Schema(query=RootQuery, auto_camelcase=False)

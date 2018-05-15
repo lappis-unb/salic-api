@@ -358,18 +358,32 @@ class ProjetoType(CommonFields, graphene.ObjectType, Resolvers):
     valor_aprovado = graphene.Float()
     valor_projeto = graphene.Float()
 
+    query_warning = (
+    "*CUIDADO* - "
+    "Utilize apenas para um único projeto(com filtro de pronac) ou "
+    "quantidade mínima de projetos.")
     #  Detail info
-    certidoes_negativas = graphene.List(CertidoesNegativasType)
-    divulgacoes = graphene.List(DivulgacaoType)
-    deslocamentos = graphene.List(DeslocamentoType)
-    distribuicoes = graphene.List(DistribuicaoType)
-    readequacoes = graphene.List(ReadequacaoType)
-    prorrogacoes = graphene.List(ProrrogacaoType)
+    certidoes_negativas = graphene.List(CertidoesNegativasType,
+                                        description=query_warning)
+    divulgacoes = graphene.List(DivulgacaoType,
+                                        description=query_warning)
+    deslocamentos = graphene.List(DeslocamentoType,
+                                        description=query_warning)
+    distribuicoes = graphene.List(DistribuicaoType,
+                                        description=query_warning)
+    readequacoes = graphene.List(ReadequacaoType,
+                                        description=query_warning)
+    prorrogacoes = graphene.List(ProrrogacaoType,
+                                        description=query_warning)
 
-    relacoes_pagamentos = graphene.List(RelacaoPagamentoType)
-    relatorios_fiscos = graphene.List(RelatorioFiscoType)
-    bens_de_capital = graphene.List(BensDeCapitalType)
-    captacoes = graphene.List(CaptacaoType)
+    relacoes_pagamentos = graphene.List(RelacaoPagamentoType,
+                                        description=query_warning)
+    relatorios_fiscos = graphene.List(RelatorioFiscoType,
+                                        description=query_warning)
+    bens_de_capital = graphene.List(BensDeCapitalType,
+                                        description=query_warning)
+    captacoes = graphene.List(CaptacaoType,
+                                        description=query_warning)
 
 
 class DoacaoGQLQuery(graphene.ObjectType, Resolvers):

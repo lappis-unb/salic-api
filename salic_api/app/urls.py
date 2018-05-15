@@ -63,16 +63,20 @@ def make_urls(app=None):
     register(FornecedorList, 'fornecedores/')
     register(FornecedorDetail, 'fornecedores/<string:fornecedor_id>/')
     register(Produto, 'fornecedores/<string:fornecedor_id>/produtos/')
-    #register(
-    #    GraphQLView.as_view('graphql', schema=schema, graphiql=True),
-    #    'graphql/')
 
     app.add_url_rule(
         '/graphql',
         view_func=GraphQLView.as_view(
             'graphql',
             schema=schema,
-            # graphiql=True  # uncomment for having the GraphiQL interface
+        ))
+
+    app.add_url_rule(
+        '/graphiql',
+        view_func=GraphQLView.as_view(
+            'graphiql',
+            schema=schema,
+            graphiql=True
         ))
 
     @app.route('/')

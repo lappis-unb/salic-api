@@ -49,10 +49,10 @@ class CommonFields:
             for k in dir(cls) if isinstance(getattr(cls, k), graphene.Scalar)
         }
         return {
-            'limit': graphene.Int(),
-            'offset': graphene.Int(),
-            'order': graphene.String(),
-            'sort': graphene.String(),
+            'limit': graphene.Int(description='Limite da quantidade de resultados'),
+            'offset': graphene.Int(description='Deslocamento dos resultados da busca. offset:10 pula os 10 primeiros resultados'),
+            'order': graphene.String(description='Se a ordenacao será crescente(padrão) ou decrescente. Ex.: order:"desc"'),
+            'sort': graphene.String(description='Como ordenar o resultado. Ex.: sort:"campo" ordenaria resultados pelo campo'),
             **class_fields
         }
 
@@ -123,33 +123,34 @@ class Resolvers:
 
 
 class DoacaoType(CommonFields, graphene.ObjectType):
-    PRONAC = graphene.String()
-    valor = graphene.String()
-    data_recibo = graphene.String()
-    nome_projeto = graphene.String()
-    cgccpf = graphene.String()
-    nome_doador = graphene.String()
+    # Pronac do projeto associado a doacao
+    PRONAC = graphene.String(description='Pronac do projeto associado')
+    valor = graphene.String(description='Valor doado')
+    data_recibo = graphene.String(description='data do recibo')
+    nome_projeto = graphene.String(description='Nome do projeto para onde a doação foi feita')
+    cgccpf = graphene.String(description='CPF ou CNPJ do doador')
+    nome_doador = graphene.String(description='Nome do doador')
 
 
 class IncentivadorType(CommonFields, graphene.ObjectType, Resolvers):
-    nome = graphene.String()
-    municipio = graphene.String()
-    UF = graphene.String()
-    responsavel = graphene.String()
-    cgccpf = graphene.String()
-    total_doado = graphene.Float()
-    tipo_pessoa = graphene.String()
+    nome = graphene.String(description='Nome do incentivador')
+    municipio = graphene.String(description='Município')
+    UF = graphene.String(description='Unidade Federativa')
+    responsavel = graphene.String(description='Responsável')
+    cgccpf = graphene.String(description='CPF ou CPNJ do incentivador')
+    total_doado = graphene.Float(description='Soma de todas as doações feitas pelo incentivador')
+    tipo_pessoa = graphene.String(description='Informa se o incentivador é pessoa física ou jurídica')
 
-    doacoes = graphene.List(DoacaoType, **DoacaoType.fields())
+    doacoes = graphene.List(DoacaoType, **DoacaoType.fields(), description='Doações feitas por esse incentivador')
 
 
 class PropostaType(CommonFields, graphene.ObjectType, Resolvers):
-    id = graphene.Int()
-    nome = graphene.String()
-    data_inicio = graphene.String()
-    data_termino = graphene.String()
-    data_aceite = graphene.String()
-    data_arquivamento = graphene.String()
+    id = graphene.Int(description='id da proposta')
+    nome = graphene.String(description='Nome do Projeto')
+    data_inicio = graphene.String(description='Data em formato aaaa-mm-dd')
+    data_termino = graphene.String(description='Data em formato aaaa-mm-dd')
+    data_aceite = graphene.String(description='Data em formato aaaa-mm-dd')
+    data_arquivamento = graphene.String(description='Data em formato aaaa-mm-dd')
     acessibilidade = graphene.String()
     objetivos = graphene.String()
     justificativa = graphene.String()
@@ -168,10 +169,10 @@ class ProponenteType(CommonFields, graphene.ObjectType, Resolvers):
     total_captado = graphene.Int()
     nome = graphene.String()
     municipio = graphene.String()
-    UF = graphene.String()
+    UF = graphene.String(description="Unidade Federativa")
     responsavel = graphene.String()
-    cgccpf = graphene.String()
-    tipo_pessoa = graphene.String()
+    cgccpf = graphene.String(description='CPF ou CNPJ do proponente')
+    tipo_pessoa = graphene.String(description='Informa se o incentivador é pessoa física ou jurídica')
 
 
 class ProdutoType(CommonFields, graphene.ObjectType, Resolvers):
@@ -180,11 +181,11 @@ class ProdutoType(CommonFields, graphene.ObjectType, Resolvers):
     id_planilha_aprovacao = graphene.Int()
     cgccpf = graphene.String()
     nome_fornecedor = graphene.String()
-    data_aprovacao = graphene.String()
-    PRONAC = graphene.String()
+    data_aprovacao = graphene.String(description='Data em formato aaaa-mm-dd')
+    PRONAC = graphene.String(description='Pronac do projeto associado')
     tipo_documento = graphene.String()
     nr_comprovante = graphene.String()
-    data_pagamento = graphene.String()
+    data_pagamento = graphene.String(description='Data em formato aaaa-mm-dd')
     tipo_forma_pagamento = graphene.String()
     nr_documento_pagamento = graphene.String()
     valor_pagamento = graphene.Float()
@@ -202,8 +203,8 @@ class FornecedorType(CommonFields, graphene.ObjectType, Resolvers):
 
 
 class CertidoesNegativasType(graphene.ObjectType, Resolvers):
-    data_emissao = graphene.String()
-    data_validade = graphene.String()
+    data_emissao = graphene.String(description='Data em formato aaaa-mm-dd')
+    data_validade = graphene.String(description='Data em formato aaaa-mm-dd')
     descricao = graphene.String()
     situacao = graphene.String()
 
@@ -218,8 +219,8 @@ class DeslocamentoType(graphene.ObjectType, Resolvers):
     id_projeto = graphene.Int()
     PaisOrigem = graphene.String()
     PaisDestino = graphene.String()
-    UFOrigem = graphene.String()
-    UFDestino = graphene.String()
+    UFOrigem = graphene.String(description="Unidade Federativa de origem")
+    UFDestino = graphene.String(description="Unidade Federativa de destino")
     MunicipioOrigem = graphene.String()
     MunicipioDestino = graphene.String()
     Qtde = graphene.Int()
@@ -244,12 +245,12 @@ class DistribuicaoType(graphene.ObjectType, Resolvers):
 
 class ReadequacaoType(graphene.ObjectType, Resolvers):
     id_readequacao = graphene.Int()
-    data_solicitacao = graphene.String()
+    data_solicitacao = graphene.String(description='Data em formato aaaa-mm-dd')
     descricao_solicitacao = graphene.Int()
     descricao_justificativa = graphene.String()
     id_solicitante = graphene.Int()
     id_avaliador = graphene.Int()
-    data_avaliador = graphene.String()
+    data_avaliador = graphene.String(description='Data em formato aaaa-mm-dd')
     descricao_avaliacao = graphene.String()
     id_tipo_readequacao = graphene.Int()
     descricao_readequacao = graphene.String()
@@ -262,9 +263,9 @@ class ReadequacaoType(graphene.ObjectType, Resolvers):
 
 
 class ProrrogacaoType(graphene.ObjectType, Resolvers):
-    data_pedido = graphene.String()
-    data_inicio = graphene.String()
-    data_final = graphene.String()
+    data_pedido = graphene.String(description='Data em formato aaaa-mm-dd')
+    data_inicio = graphene.String(description='Data em formato aaaa-mm-dd')
+    data_final = graphene.String(description='Data em formato aaaa-mm-dd')
     observacao = graphene.String()
     atendimento = graphene.String()
     usuario = graphene.String()
@@ -277,10 +278,10 @@ class RelacaoPagamentoType(graphene.ObjectType, Resolvers):
     id_planilha_aprovacao = graphene.Int()
     cgccpf = graphene.String()
     nome_fornecedor = graphene.String()
-    data_aprovacao = graphene.String()
+    data_aprovacao = graphene.String(description='Data em formato aaaa-mm-dd')
     tipo_documento = graphene.String()
     nr_comprovante = graphene.String()
-    data_pagamento = graphene.String()
+    data_pagamento = graphene.String(description='Data em formato aaaa-mm-dd')
     tipo_forma_pagamento = graphene.String()
     nr_documento_pagamento = graphene.String()
     valor_pagamento = graphene.Float()
@@ -316,7 +317,7 @@ class BensDeCapitalType(graphene.ObjectType, Resolvers):
 
 class CaptacaoType(graphene.ObjectType, Resolvers):
     valor = graphene.Float()
-    data_recibo = graphene.String()
+    data_recibo = graphene.String(description='Data em formato aaaa-mm-dd')
     cgccpf = graphene.String()
     nome_projeto = graphene.String()
     nome_doador = graphene.String()
@@ -325,11 +326,11 @@ class CaptacaoType(graphene.ObjectType, Resolvers):
 class ProjetoType(CommonFields, graphene.ObjectType, Resolvers):
     nome = graphene.String()
     providencia = graphene.String()
-    PRONAC = graphene.String()
+    PRONAC = graphene.String(description='Pronac do projeto associado')
     IdPRONAC = graphene.String()
-    UF = graphene.String()
-    data_inicio = graphene.String()
-    data_termino = graphene.String()
+    UF = graphene.String(description="Unidade Federativa")
+    data_inicio = graphene.String(description='Data em formato aaaa-mm-dd')
+    data_termino = graphene.String(description='Data em formato aaaa-mm-dd')
     ano_projeto = graphene.String()
     acessibilidade = graphene.String()
     objetivos = graphene.String()
@@ -372,25 +373,37 @@ class ProjetoType(CommonFields, graphene.ObjectType, Resolvers):
 
 
 class DoacaoGQLQuery(graphene.ObjectType, Resolvers):
-    doacoes = graphene.List(DoacaoType, **DoacaoType.fields())
+    doacoes = graphene.List(DoacaoType, **DoacaoType.fields(),
+                            description='Doações feitas para projetos')
 
 
 class IncentivadorGQLQuery(graphene.ObjectType, Resolvers):
+    description='Pessoa(física/jurídica) que realizou alguma doação'
     incentivadores = graphene.List(IncentivadorType,
-                                   **IncentivadorType.fields())
+                                   **IncentivadorType.fields(),
+                                   description=description)
 
 
 class PropostaGQLQuery(graphene.ObjectType, Resolvers):
-    propostas = graphene.List(PropostaType, **PropostaType.fields())
+    description='Propostas de projeto'
+    propostas = graphene.List(PropostaType, **PropostaType.fields(),
+                              description=description)
 
 
 class ProponenteGQLQuery(graphene.ObjectType, Resolvers):
-    proponentes = graphene.List(ProponenteType, **ProponenteType.fields())
+    description='Criador de proposta(s)'
+    proponentes = graphene.List(ProponenteType, **ProponenteType.fields(),
+                                description=description)
 
 
 class FornecedorGQLQuery(graphene.ObjectType, Resolvers):
-    fornecedores = graphene.List(FornecedorType, **FornecedorType.fields())
+    description=("Pessoa(física/jurídica) que"
+        " fornece produto ou serviço para um projeto")
+    fornecedores = graphene.List(FornecedorType, **FornecedorType.fields(),
+                                 description=description)
 
 
 class ProjetoGQLQuery(graphene.ObjectType, Resolvers):
-    projetos = graphene.List(ProjetoType, **ProjetoType.fields())
+    description='Projetos culturais'
+    projetos = graphene.List(ProjetoType, **ProjetoType.fields(),
+                             description=description)

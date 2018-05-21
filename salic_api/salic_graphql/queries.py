@@ -166,7 +166,7 @@ class PropostaType(CommonFields, graphene.ObjectType, Resolvers):
 
 
 class ProponenteType(CommonFields, graphene.ObjectType, Resolvers):
-    total_captado = graphene.Int()
+    total_captado = graphene.Float()
     nome = graphene.String()
     municipio = graphene.String()
     UF = graphene.String(description="Unidade Federativa")

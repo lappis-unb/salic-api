@@ -144,27 +144,6 @@ class IncentivadorType(CommonFields, graphene.ObjectType, Resolvers):
     doacoes = graphene.List(DoacaoType, **DoacaoType.fields(), description='Doações feitas por esse incentivador')
 
 
-class PropostaType(CommonFields, graphene.ObjectType, Resolvers):
-    id = graphene.Int(description='id da proposta')
-    nome = graphene.String(description='Nome do Projeto')
-    data_inicio = graphene.String(description='Data em formato aaaa-mm-dd')
-    data_termino = graphene.String(description='Data em formato aaaa-mm-dd')
-    data_aceite = graphene.String(description='Data em formato aaaa-mm-dd')
-    data_arquivamento = graphene.String(description='Data em formato aaaa-mm-dd')
-    acessibilidade = graphene.String()
-    objetivos = graphene.String()
-    justificativa = graphene.String()
-    democratizacao = graphene.String()
-    etapa = graphene.String()
-    ficha_tecnica = graphene.String()
-    resumo = graphene.String()
-    sinopse = graphene.String()
-    impacto_ambiental = graphene.String()
-    especificacao_tecnica = graphene.String()
-    estrategia_execucao = graphene.String()
-    mecanismo = graphene.String()
-
-
 class ProponenteType(CommonFields, graphene.ObjectType, Resolvers):
     total_captado = graphene.Float()
     nome = graphene.String()
@@ -384,6 +363,34 @@ class ProjetoType(CommonFields, graphene.ObjectType, Resolvers):
                                         description=query_warning)
     captacoes = graphene.List(CaptacaoType,
                                         description=query_warning)
+
+
+class PropostaType(CommonFields, graphene.ObjectType, Resolvers):
+    id = graphene.Int(description='id da proposta')
+    nome = graphene.String(description='Nome do Projeto')
+    data_inicio = graphene.String(description='Data em formato aaaa-mm-dd')
+    data_termino = graphene.String(description='Data em formato aaaa-mm-dd')
+    data_aceite = graphene.String(description='Data em formato aaaa-mm-dd')
+    data_arquivamento = graphene.String(description='Data em formato aaaa-mm-dd')
+    acessibilidade = graphene.String()
+    objetivos = graphene.String()
+    justificativa = graphene.String()
+    democratizacao = graphene.String()
+    etapa = graphene.String()
+    ficha_tecnica = graphene.String()
+    resumo = graphene.String()
+    sinopse = graphene.String()
+    impacto_ambiental = graphene.String()
+    especificacao_tecnica = graphene.String()
+    estrategia_execucao = graphene.String()
+    mecanismo = graphene.String()
+
+    # projeto join fields
+    UF = graphene.String()
+    PRONAC = graphene.String()
+
+    # Area join fields
+    area = graphene.String() # Area.Descricao
 
 
 class DoacaoGQLQuery(graphene.ObjectType, Resolvers):

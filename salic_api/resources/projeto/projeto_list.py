@@ -21,4 +21,5 @@ class ProjetoList(ListResource):
         'cgccpf',
         'nome',
         'area',
+        'situacao',  # TODO: This like can take a very long time to resolve
     }

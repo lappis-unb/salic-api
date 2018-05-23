@@ -18,4 +18,4 @@ class PreProjetoList(ListResource):
         'data_arquivamento',
     }
     default_sort_field = 'id'
-    filter_likeable_fields = {'nome'}
+    filter_likeable_fields = {'nome', 'area',}

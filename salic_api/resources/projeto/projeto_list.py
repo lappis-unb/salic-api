@@ -20,4 +20,5 @@ class ProjetoList(ListResource):
         'proponente',
         'cgccpf',
         'nome',
+        'area',
     }

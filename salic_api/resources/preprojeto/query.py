@@ -1,5 +1,5 @@
 from ..query import Query
-from ...models import PreProjeto, Mecanismo, Projeto, Area
+from ...models import PreProjeto, Mecanismo, Projeto, Area, Situacao
 
 
 class PreProjetoQuery(Query):
@@ -27,6 +27,7 @@ class PreProjetoQuery(Query):
         'UF': Projeto.UfProjeto,
         'PRONAC': Projeto.PRONAC,
         'area': Area.Descricao,
+        'situacao': Situacao.Descricao,
     }
 
     def query(self, limit=1, offset=0, **kwargs):

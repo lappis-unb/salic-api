@@ -12,10 +12,14 @@ class PreProjetoList(ListResource):
     sort_fields = {
         'nome',
         'id',
-        'data_inicio',
-        'data_termino',
         'data_aceite',
         'data_arquivamento',
     }
     default_sort_field = 'id'
-    filter_likeable_fields = {'nome', 'area',}
+    filter_likeable_fields = {
+        'nome',
+        'area'
+        'situacao',  # TODO: This like can take a very long time to resolve
+        'data_inicio',
+        'data_termino'
+    }

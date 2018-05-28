@@ -11,7 +11,7 @@ class ProjetoList(ListResource):
     detail_pk = 'PRONAC'
 
     sort_fields = {
-        'ano_projeto', 'PRONAC', 'data_inicio', 'data_termino',
+        'ano_projeto', 'PRONAC',
         'valor_solicitado', 'outras_fontes', 'valor_captado', 'valor_proposta',
         'valor_aprovado', 'valor_projeto',
     }
@@ -21,5 +21,7 @@ class ProjetoList(ListResource):
         'cgccpf',
         'nome',
         'area',
-        'situacao',  # TODO: This like can take a very long time to resolve
+        'situacao',  # TODO: This like can take a very long time to resolve,
+        'data_inicio',
+        'data_termino'
     }

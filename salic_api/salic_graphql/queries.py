@@ -388,6 +388,7 @@ class PropostaType(CommonFields, graphene.ObjectType, Resolvers):
     # projeto join fields
     UF = graphene.String()
     PRONAC = graphene.String()
+    situacao = graphene.String()
 
     # Area join fields
     area = graphene.String() # Area.Descricao

@@ -1,7 +1,13 @@
 import graphene
+from sqlalchemy import func
 
 from ..resources.incentivador.query import IncentivadorQuery
 from ..resources.incentivador.incentivador_list import IncentivadorList
+
+from ..resources.estatistica.contagem import (
+    IncentivadorUFQuery, ProponenteUFQuery,
+    IncentivadorRegiaoQuery, ProponenteRegiaoQuery,
+    ProjetoUFQuery, ProjetoRegiaoQuery)
 
 from ..resources.incentivador.query import DoacaoQuery
 from ..resources.incentivador.doacao import DoacaoList
@@ -121,6 +127,23 @@ class Resolvers:
     def resolve_captacoes(self, info, **kwargs):
         return CaptacaoQuery().query(kwargs['PRONAC'])
 
+    def resolve_incentivadores_por_uf(self, info, **kwargs):
+        return resolve(IncentivadorUFQuery, IncentivadorUFQuery, kwargs)
+
+    def resolve_proponentes_por_uf(self, info, **kwargs):
+        return resolve(ProponenteUFQuery, ProponenteUFQuery, kwargs)
+
+    def resolve_proponentes_por_regiao(self, info, **kwargs):
+        return resolve(ProponenteRegiaoQuery, ProponenteRegiaoQuery, kwargs)
+
+    def resolve_incentivadores_por_regiao(self, info, **kwargs):
+        return resolve(IncentivadorRegiaoQuery, IncentivadorRegiaoQuery, kwargs)
+
+    def resolve_projetos_por_uf(self, info, **kwargs):
+        return resolve(ProjetoUFQuery, ProjetoUFQuery, kwargs)
+
+    def resolve_projetos_por_regiao(self, info, **kwargs):
+        return resolve(ProjetoRegiaoQuery, ProjetoRegiaoQuery, kwargs)
 
 class DoacaoType(CommonFields, graphene.ObjectType):
     # Pronac do projeto associado a doacao
@@ -180,6 +203,9 @@ class FornecedorType(CommonFields, graphene.ObjectType, Resolvers):
 
     produtos = graphene.List(ProdutoType, **ProdutoType.fields())
 
+    produtos_count = graphene.Int()
+    def resolve_produtos_count(self, info, **kwargs):
+        return resolve(ProductQuery, Produto, kwargs).count()
 
 class CertidoesNegativasType(graphene.ObjectType, Resolvers):
     data_emissao = graphene.String(description='Data em formato aaaa-mm-dd')
@@ -429,3 +455,27 @@ class ProjetoGQLQuery(graphene.ObjectType, Resolvers):
     description='Projetos culturais'
     projetos = graphene.List(ProjetoType, **ProjetoType.fields(),
                              description=description)
+
+class UFCountType(graphene.ObjectType, Resolvers):
+    local = graphene.String()
+    quantidade = graphene.Int()
+
+
+class UFCountGQLQuery(graphene.ObjectType):
+    filters =  {
+        'segmento': graphene.String(),
+        'area': graphene.String(),
+        'situacao': graphene.String(),
+        'mecanismo': graphene.String(),
+        'enquadramento': graphene.String(),
+        'UF': graphene.String(),
+        'ano_projeto': graphene.String(),
+        'nome': graphene.String()
+    }
+
+    proponentes_por_uf = graphene.List(UFCountType, **filters)
+    proponentes_por_regiao = graphene.List(UFCountType, **filters)
+    incentivadores_por_uf = graphene.List(UFCountType, **filters)
+    incentivadores_por_regiao = graphene.List(UFCountType, **filters)
+    projetos_por_uf = graphene.List(UFCountType, **filters)
+    projetos_por_regiao = graphene.List(UFCountType, **filters)

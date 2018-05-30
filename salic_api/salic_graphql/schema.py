@@ -2,11 +2,10 @@ import graphene
 
 from .queries import IncentivadorGQLQuery, DoacaoGQLQuery, \
     ProponenteGQLQuery, PropostaGQLQuery, FornecedorGQLQuery, \
-    ProjetoGQLQuery
-
+    ProjetoGQLQuery, UFCountGQLQuery
 
 class RootQuery(IncentivadorGQLQuery, DoacaoGQLQuery, ProponenteGQLQuery,
-                PropostaGQLQuery, FornecedorGQLQuery, ProjetoGQLQuery):
+                PropostaGQLQuery, FornecedorGQLQuery, ProjetoGQLQuery, UFCountGQLQuery):
     pass
 
 

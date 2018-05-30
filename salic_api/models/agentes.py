@@ -29,6 +29,8 @@ class Pais(PaisBase, Base):
 class UF(UFBase, Base):
     iduf = Column(Integer, primary_key=True)
     Descricao = Column(String)
+    Sigla = Column(String)
+    Regiao = Column(String)
 
 
 class Municipios(MunicipiosBase, Base):

@@ -1,4 +1,9 @@
 import graphene
+from sqlalchemy import func
+
+from ..resources.query import Query
+from ..models.agentes import UF
+from ..models.sac import Interessado
 
 from ..resources.incentivador.query import IncentivadorQuery
 from ..resources.incentivador.incentivador_list import IncentivadorList
@@ -121,6 +126,36 @@ class Resolvers:
     def resolve_captacoes(self, info, **kwargs):
         return CaptacaoQuery().query(kwargs['PRONAC'])
 
+    def resolve_incentivadores_count(self, info, **kwargs):
+        query = Query().raw_query(func.count(Interessado.CgcCpf).label("count"), Interessado.Uf.label("UF"))#, resolve(IncentivadorQuery, IncentivadorList, kwargs).limit(10000000).count()
+        query = query.select_from(Interessado)
+        query = query.group_by(Interessado.Uf)
+        return query
+
+    def resolve_proponente_count(self, info, **kwargs):
+        query = Query().raw_query(func.count(Interessado.CgcCpf).label("count"), Interessado.Uf.label("UF"))#, resolve(IncentivadorQuery, IncentivadorList, kwargs).limit(10000000).count()
+        query = query.select_from(Interessado)
+        query = query.group_by(Interessado.Uf)
+        return query
+    
+"""
+    SELECT COUNT(cgccpf), UF FROM Incentivadores
+    GROUP BY UF
+ 
+
+    SELECT COUNT(Id), Country 
+      FROM Customer
+     GROUP BY Country
+     ORDER BY COUNT(Id) DESC
+"""
+
+    #@inject_arg('UF')
+    #def resolve_total_incentivadores(self, info, **kwargs):
+    #    return resolve(IncentivadorQuery, IncentivadorList, kwargs).limit(10000000).count()
+
+    #@inject_arg('UF')
+    #def resolve_total_proponentes(self, info, **kwargs):
+    #    return resolve(ProponenteQuery, ProponenteList, kwargs).limit(10000000).count()
 
 class DoacaoType(CommonFields, graphene.ObjectType):
     # Pronac do projeto associado a doacao
@@ -180,6 +215,9 @@ class FornecedorType(CommonFields, graphene.ObjectType, Resolvers):
 
     produtos = graphene.List(ProdutoType, **ProdutoType.fields())
 
+    produtos_count = graphene.Int()
+    def resolve_produtos_count(self, info, **kwargs):
+        return resolve(ProductQuery, Produto, kwargs).count()
 
 class CertidoesNegativasType(graphene.ObjectType, Resolvers):
     data_emissao = graphene.String(description='Data em formato aaaa-mm-dd')
@@ -429,3 +467,14 @@ class ProjetoGQLQuery(graphene.ObjectType, Resolvers):
     description='Projetos culturais'
     projetos = graphene.List(ProjetoType, **ProjetoType.fields(),
                              description=description)
+
+class UFType(graphene.ObjectType, Resolvers):
+    UF = graphene.String()
+    #total_incentivadores = graphene.Int()
+    #total_proponentes = graphene.Int()
+    count = graphene.Int()
+
+class UFGQLQuery(graphene.ObjectType):
+    description="Ufs"
+    UFs = graphene.List(UFType, 
+                        description=description)

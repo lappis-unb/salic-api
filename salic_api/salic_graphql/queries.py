@@ -1,11 +1,12 @@
 import graphene
 from sqlalchemy import func
 
-from ..resources.query import Query
-from ..models import Interessado, UF, Projeto, Captacao, Segmento, PreProjeto,Area, Situacao, Mecanismo, Enquadramento
-
 from ..resources.incentivador.query import IncentivadorQuery
 from ..resources.incentivador.incentivador_list import IncentivadorList
+
+from ..resources.estatistica.contagem import (
+    IncentivadorUFQuery, ProponenteUFQuery,
+    IncentivadorRegiaoQuery, ProponenteRegiaoQuery)
 
 from ..resources.incentivador.query import DoacaoQuery
 from ..resources.incentivador.doacao import DoacaoList
@@ -26,7 +27,7 @@ from ..resources.fornecedor.fornecedor_list import FornecedorList
 
 from ..resources.fornecedor.produto import Produto
 
-from ..query_helpers import resolve, apply_filters
+from ..query_helpers import resolve
 
 
 def inject_arg(argument):
@@ -126,105 +127,16 @@ class Resolvers:
         return CaptacaoQuery().query(kwargs['PRONAC'])
 
     def resolve_incentivadores_uf_count(self, info, **kwargs):
-        query = Query().raw_query(func.count(Interessado.CgcCpf).label("quantidade"), Interessado.Uf.label("local"))
-        query = (query
-            .select_from(Captacao)
-            .join(Interessado, Captacao.CgcCpfMecena == Interessado.CgcCpf)
-            .join(Projeto, Captacao.PRONAC == Projeto.PRONAC)
-            .join(PreProjeto)
-            .join(Area)
-            .join(Segmento)
-            .join(Situacao)
-            .join(Mecanismo, Mecanismo.Codigo == Projeto.Mecanismo)
-            .outerjoin(Enquadramento,
-                Enquadramento.IdPRONAC == Projeto.IdPRONAC))
-        query = apply_filters(
-            query,
-            ProjetoQuery,
-            ProjetoList.filter_likeable_fields,
-            kwargs,
-            ProjetoList.transform_args
-        )
-        query = query.group_by(Interessado.Uf)
-        return query
+        return resolve(IncentivadorUFQuery, IncentivadorUFQuery, kwargs)
 
     def resolve_proponentes_uf_count(self, info, **kwargs):
-        query = Query().raw_query(func.count(Interessado.CgcCpf).label("quantidade"),
-         Interessado.Uf.label("local"))
-        
-        query = query.select_from(Interessado)
-        query = (query
-            .join(Projeto)
-            .join(PreProjeto)
-            .join(Area)
-            .join(Segmento)
-            .join(Situacao)
-            .join(Mecanismo, Mecanismo.Codigo == Projeto.Mecanismo)
-            .outerjoin(Enquadramento,
-                Enquadramento.IdPRONAC == Projeto.IdPRONAC))
-
-        query = query.filter(Projeto.idProjeto.isnot(None))
-        query = apply_filters(
-            query,
-            ProjetoQuery,
-            ProjetoList.filter_likeable_fields,
-            kwargs,
-            ProjetoList.transform_args
-        )
-        query = query.group_by(Interessado.Uf)
-        return query
+        return resolve(ProponenteUFQuery, ProponenteUFQuery, kwargs)
 
     def resolve_proponentes_regiao_count(self, info, **kwargs):
-        query = Query().raw_query(func.count(Interessado.CgcCpf).label("quantidade"),
-            UF.Regiao.label("local")
-        )
-        
-        query = query.select_from(Interessado)
-        query = (query
-            .join(Projeto)
-            .join(UF, UF.Sigla == Interessado.Uf)
-            .join(PreProjeto)
-            .join(Area)
-            .join(Segmento)
-            .join(Situacao)
-            .join(Mecanismo, Mecanismo.Codigo == Projeto.Mecanismo)
-            .outerjoin(Enquadramento,
-                Enquadramento.IdPRONAC == Projeto.IdPRONAC))
-
-        query = query.filter(Projeto.idProjeto.isnot(None))
-        query = apply_filters(
-            query,
-            ProjetoQuery,
-            ProjetoList.filter_likeable_fields,
-            kwargs,
-            ProjetoList.transform_args
-        )
-        query = query.group_by(UF.Regiao)
-        return query
+        return resolve(ProponenteRegiaoQuery, ProponenteRegiaoQuery, kwargs)
 
     def resolve_incentivadores_regiao_count(self, info, **kwargs):
-        query = Query().raw_query(func.count(Interessado.CgcCpf).label("quantidade"), UF.Regiao.label("local"))
-        query = (query
-            .select_from(Captacao)
-            .join(Interessado, Captacao.CgcCpfMecena == Interessado.CgcCpf)
-            .join(Projeto, Captacao.PRONAC == Projeto.PRONAC)
-            .join(UF, UF.Sigla == Interessado.Uf)
-            .join(PreProjeto)
-            .join(Area)
-            .join(Segmento)
-            .join(Situacao)
-            .join(Mecanismo, Mecanismo.Codigo == Projeto.Mecanismo)
-            .outerjoin(Enquadramento,
-                Enquadramento.IdPRONAC == Projeto.IdPRONAC))
-        query = apply_filters(
-            query,
-            ProjetoQuery,
-            ProjetoList.filter_likeable_fields,
-            kwargs,
-            ProjetoList.transform_args
-        )
-        query = query.group_by(UF.Regiao)
-        return query
+        return resolve(IncentivadorRegiaoQuery, IncentivadorRegiaoQuery, kwargs)
 
 class DoacaoType(CommonFields, graphene.ObjectType):
     # Pronac do projeto associado a doacao

@@ -6,7 +6,8 @@ from ..resources.incentivador.incentivador_list import IncentivadorList
 
 from ..resources.estatistica.contagem import (
     IncentivadorUFQuery, ProponenteUFQuery,
-    IncentivadorRegiaoQuery, ProponenteRegiaoQuery)
+    IncentivadorRegiaoQuery, ProponenteRegiaoQuery,
+    ProjetoUFQuery, ProjetoRegiaoQuery)
 
 from ..resources.incentivador.query import DoacaoQuery
 from ..resources.incentivador.doacao import DoacaoList
@@ -126,17 +127,23 @@ class Resolvers:
     def resolve_captacoes(self, info, **kwargs):
         return CaptacaoQuery().query(kwargs['PRONAC'])
 
-    def resolve_incentivadores_uf_count(self, info, **kwargs):
+    def resolve_incentivadores_por_uf(self, info, **kwargs):
         return resolve(IncentivadorUFQuery, IncentivadorUFQuery, kwargs)
 
-    def resolve_proponentes_uf_count(self, info, **kwargs):
+    def resolve_proponentes_por_uf(self, info, **kwargs):
         return resolve(ProponenteUFQuery, ProponenteUFQuery, kwargs)
 
-    def resolve_proponentes_regiao_count(self, info, **kwargs):
+    def resolve_proponentes_por_regiao(self, info, **kwargs):
         return resolve(ProponenteRegiaoQuery, ProponenteRegiaoQuery, kwargs)
 
-    def resolve_incentivadores_regiao_count(self, info, **kwargs):
+    def resolve_incentivadores_por_regiao(self, info, **kwargs):
         return resolve(IncentivadorRegiaoQuery, IncentivadorRegiaoQuery, kwargs)
+
+    def resolve_projetos_por_uf(self, info, **kwargs):
+        return resolve(ProjetoUFQuery, ProjetoUFQuery, kwargs)
+
+    def resolve_projetos_por_regiao(self, info, **kwargs):
+        return resolve(ProjetoRegiaoQuery, ProjetoRegiaoQuery, kwargs)
 
 class DoacaoType(CommonFields, graphene.ObjectType):
     # Pronac do projeto associado a doacao
@@ -452,10 +459,25 @@ class ProjetoGQLQuery(graphene.ObjectType, Resolvers):
 class UFCountType(graphene.ObjectType, Resolvers):
     local = graphene.String()
     quantidade = graphene.Int()
+    
 
 class UFCountGQLQuery(graphene.ObjectType):
-    proponentes_uf_count = graphene.List(UFCountType, **ProjetoType.fields())
-    incentivadores_uf_count = graphene.List(UFCountType, **ProjetoType.fields())
-    proponentes_regiao_count = graphene.List(UFCountType, **ProjetoType.fields())
-    incentivadores_regiao_count = graphene.List(UFCountType, **ProjetoType.fields())
+    filters =  {
+        'segmento_projeto': graphene.String(),
+        'area_projeto': graphene.String(),
+        'situacao_projeto': graphene.String(),
+        'mecanismo_projeto': graphene.String(),
+        'enquadramento_projeto': graphene.String(),
+        'UF_projeto': graphene.String(),
+        'ano_projeto': graphene.String(),
+        'nome_projeto': graphene.String()
+    }
+
+    proponentes_por_uf = graphene.List(UFCountType, **filters)
+    proponentes_por_regiao = graphene.List(UFCountType, **filters)
+    incentivadores_por_uf = graphene.List(UFCountType, **filters)
+    incentivadores_por_regiao = graphene.List(UFCountType, **filters)
+    projetos_por_uf = graphene.List(UFCountType, **filters)
+    projetos_por_regiao = graphene.List(UFCountType, **filters)
+    
     

@@ -242,6 +242,10 @@ PROPONENTE_RESPONSE = {
     'municipio': 'Cidade 1',
 }
 PREPROJETO_RESPONSE = {
+    'PRONAC': '20001234',
+    'UF': 'DF',
+    'area': 'Artes Cênicas',
+    'situacao': 'Descricao 1',
     'acessibilidade': 'Acessibilidade',
     'data_aceite': '2000-01-01',
     'data_arquivamento': '2000-03-01',

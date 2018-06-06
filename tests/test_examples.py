@@ -14,10 +14,7 @@ from tests.examples import PROJETOS_AREAS, PROJETO_RESPONSE, \
 @pytest.mark.usefixtures('db_data')
 class TestCoreUrls:
     valid_core_urls = [
-        '/test',
-        '/v1/fornecedores',
-        '/v1/incentivadores',
-        '/v1/proponentes'
+        '/test', '/v1/fornecedores', '/v1/incentivadores', '/v1/proponentes'
     ]
 
     def test_core_url_examples(self, client):
@@ -95,16 +92,19 @@ class TestEndpoints:
 
 class TestEndpointsIsolated:
     def test_fornecedores_detail(self, client):
-        factories = [ex.tbcomprovantepagamento_example, ex.agentes_example,
-                     ex.tbplanilhaaprovacao_example, ex.nomes_example,
-                     ex.tbPlanilhaItens_example, ex.internet_example,
-                     ex.tbcomprovantepagamentoxplanilhaaprovacao_example,
-                     ex.tbarquivo_example, ex.projeto_example, ex.pre_projeto_example]
+        factories = [
+            ex.tbcomprovantepagamento_example, ex.agentes_example,
+            ex.tbplanilhaaprovacao_example, ex.nomes_example,
+            ex.tbPlanilhaItens_example, ex.internet_example,
+            ex.tbcomprovantepagamentoxplanilhaaprovacao_example,
+            ex.tbarquivo_example, ex.projeto_example, ex.pre_projeto_example
+        ]
 
         with examples(factories):
             url = '/v1/fornecedores/30313233343536373839616263646566e0797636'
             expected = FORNECEDOR_RESPONSE
             check_endpoint(client, url, expected)
+
 
 class TestErrorResponses:
     def test_invalid_pronac(self, client):
@@ -119,16 +119,17 @@ class TestErrorResponses:
 
     def test_invalid_argument(self, client):
         url = '/v1/propostas/?abc=1'
-        message = (
-            "invalid request arguments: "
-            "['abc']. Possible args: ("
-            "'acessibilidade', 'data_aceite', 'data_arquivamento', "
-            "'data_inicio', 'data_termino', 'democratizacao', "
-            "'especificacao_tecnica', 'estrategia_execucao', "
-            "'etapa', 'ficha_tecnica', 'format', 'id', 'impacto_ambiental', "
-            "'justificativa', 'limit', 'mecanismo', 'nome', 'objetivos', "
-            "'offset', 'order', 'resumo', 'sinopse', 'sort')"
-            )
+
+        message = ("invalid request arguments: ['abc']. "
+                   "Possible args: ('PRONAC', 'UF', "
+                   "'acessibilidade', 'area', 'data_aceite', "
+                   "'data_arquivamento', 'data_inicio', 'data_termino', "
+                   "'democratizacao', 'especificacao_tecnica', "
+                   "'estrategia_execucao', 'etapa', 'ficha_tecnica', "
+                   "'format', 'id', 'impacto_ambiental', 'justificativa', "
+                   "'limit', 'mecanismo', 'nome', 'objetivos', 'offset', "
+                   "'order', 'resumo', 'sinopse', 'situacao', 'sort')")
+
         check_error(client, url, message, 500)
 
     def test_empty_result(self, client):
@@ -143,13 +144,15 @@ class TestErrorResponses:
             message = 'invalid format'
             check_error(client, url, message, 405)
 
+
 class TestEndpointPagination:
     def get_data(self, client, limit, offset):
         url = '/v1/propostas/?limit=%s&offset=%s' % (limit, offset)
         data = client.get(url).get_data(as_text=True)
         return json.loads(data)
 
-    def assert_pagination(self, data, total, count, embedded_field, expected_embedded):
+    def assert_pagination(self, data, total, count, embedded_field,
+                          expected_embedded):
         assert data.get('total') == total
         assert data.get('count') == count
 
@@ -158,20 +161,31 @@ class TestEndpointPagination:
             assert embedded[0][k] == v
 
     def test_preprojetos_list_pagination(self, client):
-        with examples([ex.mecanismo_example]):
+        single_run_examples_list = [
+            ex.mecanismo_example, ex.areas_example,
+            ex.situacao_example, ex.projeto_example
+        ]
+
+        with examples(single_run_examples_list):
             with examples([ex.pre_projeto_example], 4):
                 data = self.get_data(client, 2, 0)
-                self.assert_pagination(data, 4, 2, 'propostas', {'id': 1})
+                self.assert_pagination(data, 3, 2, 'propostas', {'id': 1})
 
-                data = self.get_data(client, 3, 3)
-                self.assert_pagination(data, 4, 1, 'propostas', {'id': 4})
+                data = self.get_data(client, 3, 2)
+                self.assert_pagination(data, 3, 1, 'propostas', {'id': 1})
 
-    def test_pagination_error(self,client):
-        with examples([ex.mecanismo_example]):
+    def test_pagination_error(self, client):
+        single_run_examples_list = [
+            ex.mecanismo_example, ex.areas_example,
+            ex.situacao_example, ex.projeto_example
+        ]
+
+        with examples(single_run_examples_list):
             with examples([ex.pre_projeto_example], 4):
                 url = '/v1/propostas/?limit=200'
                 message = 'Max limit paging exceeded'
                 check_error(client, url, message, 405)
+
 
 def check_endpoint(client, url, expected):
     """
@@ -186,11 +200,13 @@ def check_endpoint(client, url, expected):
         assert value == expected.get('_embedded', {})[key]
     assert data == expected
 
+
 def check_error(client, url, message, status_code):
     with pytest.raises(InvalidResult) as e:
         client.get(url)
     assert e.value.args[0]['message'] == message
     assert e.value.args[1] == status_code
+
 
 def single_list(item, embed_key, url=None, **kwargs):
     """

@@ -6,7 +6,7 @@
    :target: https://codecov.io/gh/lappis-unb/salic-api
    :alt: Code coverage
 
-.. image:: https://media.readthedocs.org/static/projects/badges/passing.svg
+.. image:: http://inch-ci.org/github/dwyl/hapi-auth-jwt2.svg?branch=master
    :target: https://salic-api.readthedocs.io/pt/latest/
    :alt: Documentation
 

@@ -24,6 +24,7 @@ usuário no formato OpenAPI/Swagger.
 O projeto ainda se encontra em fase de **homologação**, sujeito ainda a muitas
 alterações, reformulações e atualizacões.
 
+---- Essa branch é utilizada para deploy contínuo para dev no lab lappis ----
 
 Requisitos
 ----------

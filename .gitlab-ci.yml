@@ -2,6 +2,7 @@ stages:
     - test
     - build
     - deploy_dev
+    - deploy_homolog
     # - deploy_prod
 
 variables:
@@ -38,11 +39,11 @@ build:
         - docker push $GUNICORN_IMAGE
         - docker push $CI_REGISTRY_IMAGE/gunicorn-api:latest
     only:
-        - /master|gitlab-ci/
+        - /master|homolog_minc/
     tags:
         - docker
 
-deploy_homolog:
+deploy_dev:
     image: cdrx/rancher-gitlab-deploy
     stage: deploy_dev
     services:
@@ -51,7 +52,63 @@ deploy_homolog:
         - upgrade --environment Development --stack SALIC-API --service gunicorn --new-image $GUNICORN_IMAGE --no-finish-upgrade --debug
         - upgrade --environment Development --stack SALIC-API --service nginx-api --new-image $NGINX_IMAGE --no-finish-upgrade --debug
     only:
-        - /master|gitlab-ci/ # change to development branch only
+        - /master/
     environment: development
     tags:
         - docker
+
+deploy_homolog_minc:
+    image: debian:buster-slim
+    stage: deploy_homolog
+    services:
+        - docker:dind
+    script:
+        - apt update
+        - apt install sshpass openssh-client -y
+        - mkdir ~/.ssh
+        - touch ~/.ssh/known_hosts
+        - ssh-keyscan -H $SSH_IP >> ~/.ssh/known_hosts
+        - sshpass -p $SSH_PASSWORD ssh $SSH_USER@$SSH_IP "sshpass -p $SSH_VPN_PASSWORD ssh $SSH_VPN_USER@$SSH_VPN_IP 'cd salic-api; echo $SSH_VPN_PASSWORD | sudo -S docker-compose pull; echo $SSH_VPN_PASSWORD | sudo -S docker-compose up -d'"
+    only:
+        - /homolog_minc/
+
+# deploy_homolog_vpn:
+#     image: docker:latest
+#     stage: deploy_homolog
+#     services:
+#         - docker:dind
+#     script:
+#         - docker pull edsonma/openconnect-globalprotect
+#         - docker run -id --privileged --cap-add=NET-ADMIN -e VPN_PASSWORD=$MINC_VPN_PASSWORD -e VPN_SERVER=$MINC_VPN_SERVER -e VPN_USER=$MINC_VPN_USER -e SERVICE_IP=$MINC_SERVICE_IP -e SERVICE_PORT=$MINC_SERVICE_PORT edsonma/openconnect-globalprotect
+#         - docker exec $(docker ps -aq) sh -c "apt install sshpass -y"
+#         - docker exec $(docker ps -aq) sh -c "apt install iputils-ping tcptraceroute -y"
+#         - docker exec $(docker ps -aq) sh -c "curl www.google.com.br"
+#         - docker exec $(docker ps -aq) sh -c "curl 192.168.15.16:8080/v1/fornecedores"
+#         - docker exec $(docker ps -aq) sh -c "tcptraceroute $MINC_SSH_IP 81"
+#
+#         - docker exec $(docker ps -aq) sh -c "ping $MINC_SSH_IP"
+#         - docker exec -i $(docker ps -aq) sh -c "
+#             sshpass -p $MINC_SSH_PASSWORD ssh matheus_faria@$MINC_SSH_IP
+#                 'cd salic-api;
+#                  echo $MINC_SSH_PASSWORD | sudo -S docker-compose pull;
+#                  echo $MINC_SSH_PASSWORD | sudo -S docker-compose up'"
+#     only:
+#         - /homolog_minc/
+
+# deploy_homolog_vpn:
+#     image: edsonma/openconnect-globalprotect
+#     stage: deploy_homolog
+#     services:
+#         - docker:dind
+#     variables:
+#         VPN_PASSWORD: $MINC_VPN_PASSWORD
+#         VPN_SERVER: $MINC_VPN_SERVER
+#         VPN_USER: $MINC_VPN_USER
+#         SERVICE_IP: $MINC_SERVICE_IP
+#         SERVICE_PORT: $MINC_SERVICE_PORT
+#     script:
+#         - apt install sshpass
+#         - sshpass -p $MINC_SSH_PASSWORD ssh $MINC_VPN_USER@$MINC_SSH_IP sh -c "export SUDO_ASKPASS=$MINC_SSH_PASSWORD; sudo --askpass docker-compose pull; sudo --askpass docker-compose up"
+#
+#     only:
+#         - /homolog_minc/

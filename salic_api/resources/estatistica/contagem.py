@@ -129,3 +129,35 @@ class ProjetoRegiaoQuery(ContagemQuery):
         query = join_projeto_fields(query)
         query = query.group_by(UF.Regiao)
         return query
+
+
+class SegmentoCountQuery(ContagemQuery):
+    def query(self, **kwargs):
+        query = Query().raw_query(
+            func.count(Projeto.PRONAC.distinct()).label("quantidade"),
+            Segmento.Descricao.label("segmento"))
+
+        query = query.select_from(Projeto)
+        query = (
+            query
+            .join(PreProjeto)
+            .join(Interessado))
+        query = join_projeto_fields(query)
+        query = query.group_by(Segmento.Descricao)
+        return query
+
+
+class AreaCountQuery(ContagemQuery):
+    def query(self, **kwargs):
+        query = Query().raw_query(
+            func.count(Projeto.PRONAC.distinct()).label("quantidade"),
+            Area.Descricao.label("area"))
+
+        query = query.select_from(Projeto)
+        query = (
+            query
+            .join(PreProjeto)
+            .join(Interessado))
+        query = join_projeto_fields(query)
+        query = query.group_by(Area.Descricao)
+        return query

@@ -1,5 +1,7 @@
 import graphene
+
 from sqlalchemy import func
+from graphene.types.scalars import Scalar
 
 from ..resources.incentivador.query import IncentivadorQuery
 from ..resources.incentivador.incentivador_list import IncentivadorList
@@ -8,7 +10,7 @@ from ..resources.estatistica.contagem import (
     IncentivadorUFQuery, ProponenteUFQuery,
     IncentivadorRegiaoQuery, ProponenteRegiaoQuery,
     ProjetoUFQuery, ProjetoRegiaoQuery, SegmentoCountQuery,
-    AreaCountQuery)
+    AreaCountQuery, result_to_dict)
 
 from ..resources.incentivador.query import DoacaoQuery
 from ..resources.incentivador.doacao import DoacaoList
@@ -30,6 +32,22 @@ from ..resources.fornecedor.fornecedor_list import FornecedorList
 from ..resources.fornecedor.produto import Produto
 
 from ..query_helpers import resolve
+
+
+
+class ObjectField(Scalar):
+
+    @staticmethod
+    def serialize(dt):
+        return dt
+
+    @staticmethod
+    def parse_literal(node):
+        return node.value
+
+    @staticmethod
+    def parse_value(value):
+        return value
 
 
 def inject_arg(argument):
@@ -129,28 +147,36 @@ class Resolvers:
         return CaptacaoQuery().query(kwargs['PRONAC'])
 
     def resolve_incentivadores_por_uf(self, info, **kwargs):
-        return resolve(IncentivadorUFQuery, IncentivadorUFQuery, kwargs)
+        query_result = resolve(IncentivadorUFQuery, IncentivadorUFQuery, kwargs)
+        return result_to_dict(query_result)
 
     def resolve_proponentes_por_uf(self, info, **kwargs):
-        return resolve(ProponenteUFQuery, ProponenteUFQuery, kwargs)
+        query_result = resolve(ProponenteUFQuery, ProponenteUFQuery, kwargs)
+        return result_to_dict(query_result)
 
     def resolve_proponentes_por_regiao(self, info, **kwargs):
-        return resolve(ProponenteRegiaoQuery, ProponenteRegiaoQuery, kwargs)
+        query_result = resolve(ProponenteRegiaoQuery, ProponenteRegiaoQuery, kwargs)
+        return result_to_dict(query_result)
 
     def resolve_incentivadores_por_regiao(self, info, **kwargs):
-        return resolve(IncentivadorRegiaoQuery, IncentivadorRegiaoQuery, kwargs)
+        query_result = resolve(IncentivadorRegiaoQuery, IncentivadorRegiaoQuery, kwargs)
+        return result_to_dict(query_result)
 
     def resolve_projetos_por_uf(self, info, **kwargs):
-        return resolve(ProjetoUFQuery, ProjetoUFQuery, kwargs)
+        query_result = resolve(ProjetoUFQuery, ProjetoUFQuery, kwargs)
+        return result_to_dict(query_result)
 
     def resolve_projetos_por_regiao(self, info, **kwargs):
-        return resolve(ProjetoRegiaoQuery, ProjetoRegiaoQuery, kwargs)
+        query_result = resolve(ProjetoRegiaoQuery, ProjetoRegiaoQuery, kwargs)
+        return result_to_dict(query_result)
 
     def resolve_total_por_segmento(self, info, **kwargs):
-        return resolve(SegmentoCountQuery, SegmentoCountQuery, kwargs)
+        query_result = resolve(SegmentoCountQuery, SegmentoCountQuery, kwargs).all()
+        return result_to_dict(query_result)
 
     def resolve_total_por_area(self, info, **kwargs):
-        return resolve(AreaCountQuery, AreaCountQuery, kwargs)
+        query_result = resolve(AreaCountQuery, AreaCountQuery, kwargs).all()
+        return result_to_dict(query_result)
 
 class DoacaoType(CommonFields, graphene.ObjectType):
     # Pronac do projeto associado a doacao
@@ -463,17 +489,6 @@ class ProjetoGQLQuery(graphene.ObjectType, Resolvers):
     projetos = graphene.List(ProjetoType, **ProjetoType.fields(),
                              description=description)
 
-class UFCountType(graphene.ObjectType, Resolvers):
-    local = graphene.String()
-    quantidade = graphene.Int()
-
-class SegmentoCountType(graphene.ObjectType, Resolvers):
-    quantidade = graphene.Int()
-    segmento = graphene.String()
-
-class AreaCountType(graphene.ObjectType, Resolvers):
-    quantidade = graphene.Int()
-    area = graphene.String()
 
 class UFCountGQLQuery(graphene.ObjectType, Resolvers):
     filters =  {
@@ -487,11 +502,12 @@ class UFCountGQLQuery(graphene.ObjectType, Resolvers):
         'nome': graphene.String()
     }
 
-    proponentes_por_uf = graphene.List(UFCountType, **filters)
-    proponentes_por_regiao = graphene.List(UFCountType, **filters)
-    incentivadores_por_uf = graphene.List(UFCountType, **filters)
-    incentivadores_por_regiao = graphene.List(UFCountType, **filters)
-    projetos_por_uf = graphene.List(UFCountType, **filters)
-    projetos_por_regiao = graphene.List(UFCountType, **filters)
-    total_por_segmento = graphene.List(SegmentoCountType, {'limit': graphene.Int()})
-    total_por_area = graphene.List(AreaCountType, {'limit': graphene.Int()})
+    proponentes_por_uf = ObjectField(**filters)
+    proponentes_por_regiao = ObjectField(**filters)
+    incentivadores_por_uf = ObjectField(**filters)
+    incentivadores_por_regiao = ObjectField(**filters)
+    projetos_por_uf = ObjectField(**filters)
+    projetos_por_regiao = ObjectField(**filters)
+
+    total_por_segmento = ObjectField({'limit': graphene.Int(), 'ano_projeto': graphene.String()})
+    total_por_area = ObjectField({'limit': graphene.Int(), 'ano_projeto': graphene.String()})

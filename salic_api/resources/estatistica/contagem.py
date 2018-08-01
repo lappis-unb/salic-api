@@ -8,6 +8,13 @@ from ...models import Interessado, UF, Projeto, Captacao, Segmento, \
     PreProjeto, Area, Situacao, Mecanismo, Enquadramento
 
 
+def result_to_dict(query_result):
+    result={}
+    for obj in query_result:
+        result[obj.label] = obj.count
+    return result
+
+
 def join_projeto_fields(query):
         query = (
             query
@@ -34,8 +41,8 @@ class ContagemQuery(Query):
 class IncentivadorUFQuery(ContagemQuery):
     def query(self, **kwargs):
         query = Query().raw_query(
-            func.count(Interessado.CgcCpf.distinct()).label("quantidade"),
-            Interessado.Uf.label("local"))
+            func.count(Interessado.CgcCpf.distinct()).label("count"),
+            Interessado.Uf.label("label"))
         query = (
             query
             .select_from(Interessado)
@@ -49,8 +56,8 @@ class IncentivadorUFQuery(ContagemQuery):
 class IncentivadorRegiaoQuery(ContagemQuery):
     def query(self, **kwargs):
         query = Query().raw_query(
-            func.count(Interessado.CgcCpf.distinct()).label("quantidade"),
-            UF.Regiao.label("local"))
+            func.count(Interessado.CgcCpf.distinct()).label("count"),
+            UF.Regiao.label("label"))
         query = (
             query
             .select_from(Captacao)
@@ -65,8 +72,8 @@ class IncentivadorRegiaoQuery(ContagemQuery):
 class ProponenteRegiaoQuery(ContagemQuery):
     def query(self, **kwargs):
         query = Query().raw_query(
-            func.count(Interessado.CgcCpf.distinct()).label("quantidade"),
-            UF.Regiao.label("local")
+            func.count(Interessado.CgcCpf.distinct()).label("count"),
+            UF.Regiao.label("label")
         )
 
         query = query.select_from(Interessado)
@@ -84,8 +91,8 @@ class ProponenteRegiaoQuery(ContagemQuery):
 class ProponenteUFQuery(ContagemQuery):
     def query(self, **kwargs):
         query = Query().raw_query(
-            func.count(Interessado.CgcCpf.distinct()).label("quantidade"),
-            Interessado.Uf.label("local"))
+            func.count(Interessado.CgcCpf.distinct()).label("count"),
+            Interessado.Uf.label("label"))
 
         query = query.select_from(Interessado)
         query = (
@@ -101,8 +108,8 @@ class ProponenteUFQuery(ContagemQuery):
 class ProjetoUFQuery(ContagemQuery):
     def query(self, **kwargs):
         query = Query().raw_query(
-            func.count(Projeto.PRONAC.distinct()).label("quantidade"),
-            Projeto.UfProjeto.label("local"))
+            func.count(Projeto.PRONAC.distinct()).label("count"),
+            Projeto.UfProjeto.label("label"))
         query = query.select_from(Projeto)
         query = (
             query
@@ -116,8 +123,8 @@ class ProjetoUFQuery(ContagemQuery):
 class ProjetoRegiaoQuery(ContagemQuery):
     def query(self, **kwargs):
         query = Query().raw_query(
-            func.count(Projeto.PRONAC.distinct()).label("quantidade"),
-            UF.Regiao.label("local")
+            func.count(Projeto.PRONAC.distinct()).label("count"),
+            UF.Regiao.label("label")
         )
 
         query = query.select_from(Projeto)
@@ -134,8 +141,8 @@ class ProjetoRegiaoQuery(ContagemQuery):
 class SegmentoCountQuery(ContagemQuery):
     def query(self, **kwargs):
         query = Query().raw_query(
-            func.count(Projeto.PRONAC.distinct()).label("quantidade"),
-            Segmento.Descricao.label("segmento"))
+            func.count(Projeto.PRONAC.distinct()).label("count"),
+            Segmento.Descricao.label("label"))
 
         query = query.select_from(Projeto)
         query = (
@@ -150,8 +157,8 @@ class SegmentoCountQuery(ContagemQuery):
 class AreaCountQuery(ContagemQuery):
     def query(self, **kwargs):
         query = Query().raw_query(
-            func.count(Projeto.PRONAC.distinct()).label("quantidade"),
-            Area.Descricao.label("area"))
+            func.count(Projeto.PRONAC.distinct()).label("count"),
+            Area.Descricao.label("label"))
 
         query = query.select_from(Projeto)
         query = (

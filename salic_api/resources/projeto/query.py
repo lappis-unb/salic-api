@@ -427,6 +427,16 @@ class SegmentoQuery(Query):
         return self.select_as(Segmento, Descricao='nome', Codigo='codigo')
 
 
+class AreasSegmentosQuery(Query):
+    def query(self):
+        query = self.raw_query(
+                Area.Descricao.label('area'),
+                Segmento.Descricao.label('segment'))
+        query = query.select_from(Segmento)
+        query = query.join(Area, Segmento.Codigo.startswith(Area.Codigo))
+        return query
+
+
 class CertidoesNegativasQuery(Query):
     """
     Returns certificate's name and situation according to it's id

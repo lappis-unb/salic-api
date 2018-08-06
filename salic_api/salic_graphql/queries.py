@@ -21,7 +21,7 @@ from ..resources.preprojeto.pre_projeto_list import PreProjetoList
 from ..resources.projeto.projeto_list import ProjetoList
 from ..resources.projeto.query import (
     ProjetoQuery, CertidoesNegativasQuery, DivulgacaoQuery, DeslocamentoQuery,
-    DistribuicaoQuery, ReadequacaoQuery, CaptacaoQuery)
+    DistribuicaoQuery, ReadequacaoQuery, CaptacaoQuery, AreasSegmentosQuery)
 
 from ..resources.proponente.query import ProponenteQuery
 from ..resources.proponente.proponente_list import ProponenteList
@@ -177,6 +177,16 @@ class Resolvers:
     def resolve_total_por_area(self, info, **kwargs):
         query_result = resolve(AreaCountQuery, AreaCountQuery, kwargs).all()
         return result_to_dict(query_result)
+
+    def resolve_areas(self, info, **kwargs):
+        query_result = AreasSegmentosQuery().query().all()
+        result={}
+        for obj in query_result:
+            if obj.area in result.keys():
+                result[obj.area] += [obj.segment]
+            else:
+                result[obj.area] = [obj.segment]
+        return result
 
 class DoacaoType(CommonFields, graphene.ObjectType):
     # Pronac do projeto associado a doacao
@@ -489,6 +499,9 @@ class ProjetoGQLQuery(graphene.ObjectType, Resolvers):
     projetos = graphene.List(ProjetoType, **ProjetoType.fields(),
                              description=description)
 
+
+class AreaGQLQuery(graphene.ObjectType, Resolvers):
+    areas = ObjectField()
 
 class UFCountGQLQuery(graphene.ObjectType, Resolvers):
     filters =  {

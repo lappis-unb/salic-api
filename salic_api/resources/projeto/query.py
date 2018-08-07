@@ -534,9 +534,10 @@ class DeslocamentoQuery(Query):
 
             .join(municipio_origem, municipio_origem.c.idMunicipioIBGE == Deslocamento.idMunicipioOrigem)
             .join(municipio_destino, municipio_destino.c.idMunicipioIBGE == Deslocamento.idMunicipioDestino)
-
-            .filter(Projeto.PRONAC == PRONAC)
         )
+
+        if PRONAC is not None:
+            query = query.filter(Projeto.PRONAC == PRONAC)
 
         return self.execute_query(query, {'PRONAC': PRONAC}).fetchall()
 

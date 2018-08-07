@@ -262,7 +262,7 @@ class DivulgacaoType(graphene.ObjectType, Resolvers):
     veiculo = graphene.String()
 
 
-class DeslocamentoType(graphene.ObjectType, Resolvers):
+class DeslocamentoType(CommonFields, graphene.ObjectType):
     id_deslocamento = graphene.Int()
     id_projeto = graphene.Int()
     PaisOrigem = graphene.String()
@@ -466,6 +466,10 @@ class PropostaType(CommonFields, graphene.ObjectType, Resolvers):
 class DoacaoGQLQuery(graphene.ObjectType, Resolvers):
     doacoes = graphene.List(DoacaoType, **DoacaoType.fields(),
                             description='Doações feitas para projetos')
+
+
+class DeslocamentosGQLQuery(graphene.ObjectType, Resolvers):
+    deslocamentos = graphene.List(DeslocamentoType, **DeslocamentoType.fields())
 
 
 class IncentivadorGQLQuery(graphene.ObjectType, Resolvers):

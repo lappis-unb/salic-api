@@ -546,7 +546,7 @@ class DistribuicaoQuery(Query):
     """
     Returns information of how the project will be distributed. Ex: ticket prices...
     """
-    def query(self, PRONAC):  # noqa: N803
+    def query(self, **kwargs):  # noqa: N803
         return (
             self.raw_query(
                 PlanoDistribuicao.idPlanoDistribuicao.label('idPlanoDistribuicao'),
@@ -569,9 +569,11 @@ class DistribuicaoQuery(Query):
             .join(Area, Area.Codigo == PlanoDistribuicao.Area)
             .join(Segmento, Segmento.Codigo == PlanoDistribuicao.Segmento)
             .join(Verificacao)
-            .filter(and_(Projeto.PRONAC == PRONAC,
-                         PlanoDistribuicao.stPlanoDistribuicaoProduto == 1))
         )
+
+        if(kwargs['PRONAC']):
+            query = query.filter(and_(Projeto.PRONAC == kwargs['PRONAC'],
+                         PlanoDistribuicao.stPlanoDistribuicaoProduto == 1))
 
 
 class ReadequacaoQuery(Query):

@@ -120,7 +120,7 @@ class Resolvers:
 
     @inject_arg('PRONAC')
     def resolve_distribuicoes(self, info, **kwargs):
-        return DistribuicaoQuery().query(kwargs['PRONAC'])
+        return DistribuicaoQuery().query(PRONAC=kwargs['PRONAC'])
 
     @inject_arg('IdPRONAC')
     def resolve_readequacoes(self, info, **kwargs):
@@ -278,8 +278,8 @@ class DistribuicaoType(graphene.ObjectType, Resolvers):
     idPlanoDistribuicao = graphene.Int()
     QtdeVendaNormal = graphene.Int()
     QtdeVendaPromocional = graphene.Int()
-    PrecoUnitarioNormal = graphene.Int()
-    PrecoUnitarioPromocional = graphene.Int()
+    PrecoUnitarioNormal = graphene.String()
+    PrecoUnitarioPromocional = graphene.String()
     QtdeOutros = graphene.Int()
     QtdeProponente = graphene.Int()
     QtdeProduzida = graphene.Int()
@@ -466,6 +466,10 @@ class PropostaType(CommonFields, graphene.ObjectType, Resolvers):
 class DoacaoGQLQuery(graphene.ObjectType, Resolvers):
     doacoes = graphene.List(DoacaoType, **DoacaoType.fields(),
                             description='Doações feitas para projetos')
+
+
+class DistribuicaoGQLQuery(graphene.ObjectType, Resolvers):
+    distribuicoes = graphene.List(DistribuicaoType)
 
 
 class DeslocamentosGQLQuery(graphene.ObjectType, Resolvers):

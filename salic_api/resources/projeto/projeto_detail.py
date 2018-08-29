@@ -145,7 +145,7 @@ class ProjetoDetail(DetailResource):
         projeto['deslocamento'] = self.cleaned_deslocamentos(deslocamentos)
 
         # Distribuições
-        distribuicoes = DistribuicaoQuery().query(pronac)
+        distribuicoes = DistribuicaoQuery().query(PRONAC=pronac)
         projeto['distribuicao'] = self.cleaned_distribuicoes(distribuicoes)
 
         # Readequações

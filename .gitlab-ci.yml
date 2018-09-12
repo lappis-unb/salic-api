@@ -48,8 +48,8 @@ deploy_homolog:
     services:
         - docker:dind
     script:
-        - upgrade --environment Development --stack SALIC-API --service gunicorn --new-image $GUNICORN_IMAGE --no-finish-upgrade --debug
-        - upgrade --environment Development --stack SALIC-API --service nginx-api --new-image $NGINX_IMAGE --no-finish-upgrade --debug
+        - upgrade --environment Production --stack SALIC-API --service gunicorn --new-image $GUNICORN_IMAGE --no-finish-upgrade --debug
+        - upgrade --environment Production --stack SALIC-API --service nginx-api --new-image $NGINX_IMAGE --no-finish-upgrade --debug
     only:
         - /lappis-homolog|gitlab-ci/ # change to development branch only
     environment: development

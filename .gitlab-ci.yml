@@ -52,6 +52,6 @@ deploy_homolog:
         - upgrade --environment Production --stack SALIC-API --service nginx-api --new-image $NGINX_IMAGE --no-finish-upgrade --debug
     only:
         - /lappis-homolog|gitlab-ci/ # change to development branch only
-    environment: development
+    environment: production
     tags:
         - docker

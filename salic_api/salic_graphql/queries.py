@@ -116,7 +116,7 @@ class Resolvers:
 
     @inject_arg('PRONAC')
     def resolve_deslocamentos(self, info, **kwargs):
-        return DeslocamentoQuery().query(kwargs['PRONAC'])
+        return resolve(DeslocamentoQuery, DeslocamentoQuery, kwargs)
 
     @inject_arg('PRONAC')
     def resolve_distribuicoes(self, info, **kwargs):
@@ -272,6 +272,7 @@ class DeslocamentoType(CommonFields, graphene.ObjectType):
     MunicipioOrigem = graphene.String()
     MunicipioDestino = graphene.String()
     Qtde = graphene.Int()
+    segmento = graphene.String()
 
 
 class DistribuicaoType(graphene.ObjectType, Resolvers):

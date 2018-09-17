@@ -498,48 +498,69 @@ class DivulgacaoQuery(Query):
 
 
 class DeslocamentoQuery(Query):
+    pais_origem = alias(Pais, name='pais_origem')
+    pais_destino = alias(Pais, name='pais_destino')
+    uf_origem = alias(UF, name='uf_origem')
+    uf_destino = alias(UF, name='uf_destino')
+    municipio_origem = alias(Municipios, name='municipios_origem')
+    municipio_destino = alias(Municipios, name='municipios_destino')
+
+    fields_already_filtered = {}
+    transform_args = {}
+    filter_likeable_fields = {}
+    sort_fields = {}
+    default_sort_field = None
+
+    labels_to_fields  = {
+        'segmento' : Segmento.Descricao,
+        'id_projeto' : Deslocamento.idProjeto,
+        'PaisOrigem' : pais_origem.c.Descricao,
+        'PaisDestino' : pais_destino.c.Descricao,
+        'UFOrigem' : uf_origem.c.Descricao,
+        'UFDestino' : uf_destino.c.Descricao,
+        'MunicipioOrigem' : municipio_origem.c.Descricao,
+        'MunicipioDestino' : municipio_destino.c.Descricao,
+        'Qtde' : Deslocamento.Qtde,
+    }
+
     """
     Returns descriptions of places which the project may pass.
     """
-    def query(self, PRONAC):  # noqa: N803
-        pais_origem = alias(Pais, name='pais_origem')
-        pais_destino = alias(Pais, name='pais_destino')
-        uf_origem = alias(UF, name='uf_origem')
-        uf_destino = alias(UF, name='uf_destino')
-        municipio_origem = alias(Municipios, name='municipios_origem')
-        municipio_destino = alias(Municipios, name='municipios_destino')
+    def query(self, PRONAC=None):  # noqa: N803
 
         query = self.raw_query(
             Deslocamento.idDeslocamento.label("id_deslocamento"),
             Deslocamento.idProjeto.label("id_projeto"),
-            pais_origem.c.Descricao.label("PaisOrigem"),
-            pais_destino.c.Descricao.label("PaisDestino"),
-            uf_origem.c.Descricao.label("UFOrigem"),
-            uf_destino.c.Descricao.label("UFDestino"),
-            municipio_origem.c.Descricao.label("MunicipioOrigem"),
-            municipio_destino.c.Descricao.label("MunicipioDestino"),
+            self.pais_origem.c.Descricao.label("PaisOrigem"),
+            self.pais_destino.c.Descricao.label("PaisDestino"),
+            self.uf_origem.c.Descricao.label("UFOrigem"),
+            self.uf_destino.c.Descricao.label("UFDestino"),
+            self.municipio_origem.c.Descricao.label("MunicipioOrigem"),
+            self.municipio_destino.c.Descricao.label("MunicipioDestino"),
             Deslocamento.Qtde.label("Qtde"),
+            Segmento.Descricao.label("segmento"),
         )
 
         query = (
             query
             .select_from(Deslocamento)
             .join(Projeto, Projeto.idProjeto == Deslocamento.idProjeto)
+            .join(Segmento)
 
-            .join(pais_origem, pais_origem.c.idPais == Deslocamento.idPaisOrigem)
-            .join(pais_destino, pais_destino.c.idPais == Deslocamento.idPaisDestino)
+            .join(self.pais_origem, self.pais_origem.c.idPais == Deslocamento.idPaisOrigem)
+            .join(self.pais_destino, self.pais_destino.c.idPais == Deslocamento.idPaisDestino)
 
-            .join(uf_origem, uf_origem.c.iduf == Deslocamento.idUFOrigem)
-            .join(uf_destino, uf_destino.c.iduf == Deslocamento.idUFDestino)
+            .join(self.uf_origem, self.uf_origem.c.iduf == Deslocamento.idUFOrigem)
+            .join(self.uf_destino, self.uf_destino.c.iduf == Deslocamento.idUFDestino)
 
-            .join(municipio_origem, municipio_origem.c.idMunicipioIBGE == Deslocamento.idMunicipioOrigem)
-            .join(municipio_destino, municipio_destino.c.idMunicipioIBGE == Deslocamento.idMunicipioDestino)
+            .join(self.municipio_origem, self.municipio_origem.c.idMunicipioIBGE == Deslocamento.idMunicipioOrigem)
+            .join(self.municipio_destino, self.municipio_destino.c.idMunicipioIBGE == Deslocamento.idMunicipioDestino)
         )
 
         if PRONAC is not None:
             query = query.filter(Projeto.PRONAC == PRONAC)
 
-        return self.execute_query(query, {'PRONAC': PRONAC}).fetchall()
+        return query
 
 
 class DistribuicaoQuery(Query):

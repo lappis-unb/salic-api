@@ -153,14 +153,13 @@ class ProjetoDetail(DetailResource):
         projeto['readequacoes'] = self.cleaned_readequacoes(readequacoes)
 
         # Prorrogação
-        prorrogacao = Query().execute_query(
-            ProjetoQuery().postpone_request(projeto['IdPRONAC'])).fetchall()
+        prorrogacao = ProjetoQuery().postpone_request(projeto['IdPRONAC']).all()
         projeto['prorrogacao'] = listify_queryset(prorrogacao)
 
         # Relação de pagamentos
         pagamentos_query = ProjetoQuery().payments_listing(
             idPronac=projeto['IdPRONAC'])
-        pagamentos = Query().execute_query(pagamentos_query).fetchall()
+        pagamentos = pagamentos_query.all()
         projeto['relacao_pagamentos'] = listify_queryset(pagamentos)
 
         # Relatório fisco

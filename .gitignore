@@ -40,3 +40,4 @@ tests.py
 .vscode
 .idea
 .DS_Store
+*.swp

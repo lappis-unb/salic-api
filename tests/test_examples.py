@@ -187,6 +187,29 @@ class TestEndpointPagination:
                 check_error(client, url, message, 405)
 
 
+@pytest.mark.usefixtures('db_data')
+class TestSorting:
+    def test_incentivadores_sorted_by_name(self, client):
+        url = '/v1/incentivadores/?sort=nome'
+        assert client.get(url).status_code == 200, url
+
+    def test_proponentes_sorted_by_name(self, client):
+        url = '/v1/proponentes/?sort=nome'
+        assert client.get(url).status_code == 200, url
+
+    def test_projetos_sorted_by_name(self, client):
+        url = '/v1/projetos/?sort=nome'
+        assert client.get(url).status_code == 200, url
+
+    def test_propostas_sorted_by_name(self, client):
+        url = '/v1/propostas/?sort=nome'
+        assert client.get(url).status_code == 200, url
+
+    def test_fornecedores_sorted_by_name(self, client):
+        url = '/v1/fornecedores/?sort=nome'
+        assert client.get(url).status_code == 200, url
+
+
 def check_endpoint(client, url, expected):
     """
     Tests if response from given url matches the expected object.

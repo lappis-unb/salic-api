@@ -23,7 +23,7 @@ class FornecedorList(ListResource):
     }
     request_args = {
         'nome', 'fornecedor_id', 'cgccpf', 'PRONAC', 'limit', 'offset',
-        'format'
+        'format', 'sort'
     }
 
     def prepared_detail_object(self, item):

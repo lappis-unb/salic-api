@@ -23,7 +23,7 @@ class ProponenteList(ListResource):
 
     request_args = {
         'nome', 'cgccpf', 'proponente_id', 'municipio', 'UF', 'tipo_pessoa',
-        'limit', 'offset', 'format'
+        'limit', 'offset', 'format', 'sort'
     }
 
     def prepared_detail_object(self, item):

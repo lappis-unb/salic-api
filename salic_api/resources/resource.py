@@ -54,6 +54,7 @@ class SalicResource(Resource):
     request_args = {'format'}
     filter_likeable_fields = {}
     transform_args = {}
+    non_filtering_args = ()
 
     def __init__(self, query_data=None):
         init_config()
@@ -173,7 +174,7 @@ class SalicResource(Resource):
             data,
             self.query_class,
             self.filter_likeable_fields,
-            query_args,
+            {k: v for k, v in query_args.items() if k not in self.non_filtering_args},
             self.transform_args
         )
         return query

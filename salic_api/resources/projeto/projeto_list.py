@@ -16,6 +16,7 @@ class ProjetoList(ListResource):
         'valor_aprovado', 'valor_projeto',
     }
     default_sort_field = 'ano_projeto'
+    non_filtering_args = {'data_inicio_min', 'data_inicio_max', 'data_termino_min', 'data_termino_max'}
     filter_likeable_fields = {
         'proponente',
         'cgccpf',

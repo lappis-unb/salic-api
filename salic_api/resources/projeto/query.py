@@ -85,7 +85,11 @@ class ProjetoQuery(Query):
         'PRONAC': Projeto.PRONAC,
         'UF': Projeto.UfProjeto,
         'data_inicio': Projeto.data_inicio_execucao,
+        'data_inicio_min': Projeto.data_inicio_execucao,
+        'data_inicio_max': Projeto.data_inicio_execucao,
         'data_termino': Projeto.data_fim_execucao,
+        'data_termino_min': Projeto.data_fim_execucao,
+        'data_termino_max': Projeto.data_fim_execucao,
         'IdPRONAC': Projeto.IdPRONAC,
         'ano_projeto': Projeto.AnoProjeto,
 
@@ -125,6 +129,11 @@ class ProjetoQuery(Query):
 
     fields_already_filtered = {'data_inicio', 'data_termino'}
 
+    @property
+    def query_fields(self):
+        black_list = {'data_inicio_min', 'data_inicio_max', 'data_termino_min', 'data_termino_max'}
+        return tuple(v.label(k) for k, v in self.labels_to_fields.items() if k not in black_list)
+
     #
     # Queries
     #
@@ -155,17 +164,18 @@ class ProjetoQuery(Query):
 
             # # Filter query by dates
             end_of_day = (lambda x: None if x is None else x + ' 23:59:59')
-            query = filter_query(query, {
-                Projeto.data_inicio_execucao: data_inicio or data_inicio_min,
-                Projeto.data_fim_execucao: data_termino or data_termino_min,
-            }, op=operator.ge)
+            if data_inicio_min is not None:
+                query = query.filter(Projeto.data_inicio_execucao >= data_inicio_min)
 
-            query = filter_query(query, [
-                (Projeto.data_inicio_execucao, end_of_day(data_inicio)),
-                (Projeto.data_inicio_execucao, end_of_day(data_inicio_max)),
-                (Projeto.data_inicio_execucao, end_of_day(data_termino)),
-                (Projeto.data_fim_execucao, end_of_day(data_termino_max)),
-            ], op=operator.le)
+            if data_inicio_max is not None:
+                query = query.filter(Projeto.data_inicio_execucao <= end_of_day(data_inicio_max))
+
+            if data_termino_min is not None:
+                query = query.filter(Projeto.data_fim_execucao >= data_termino_min)
+
+            if data_termino_max is not None:
+                query = query.filter(Projeto.data_fim_execucao <= end_of_day(data_termino_max))
+
         return query
 
     def check_pronac(self, pronac):

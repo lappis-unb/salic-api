@@ -22,16 +22,24 @@ class IncentivadorQuery(Query):
         'cgccpf': Interessado.CgcCpf,
         'total_doado': func.sum(Captacao.CaptacaoReal),
         'tipo_pessoa': Interessado.tipoPessoaLabel,
+        'PRONAC': Captacao.PRONAC,
     }
+
+    @property
+    def query_fields(self):
+        black_list = {'PRONAC'}
+        return tuple(v.label(k) for k, v in self.labels_to_fields.items() if k not in black_list)
 
     def query(self, limit=1, offset=0, **kwargs):
         query = self.raw_query(*self.query_fields).join(Captacao)
-
         if 'PRONAC' in kwargs:
-            query = query \
-                .join(Projeto, Captacao.PRONAC == Projeto.PRONAC) \
-                .filter(Captacao.PRONAC == kwargs['PRONAC'])
-
+            pronac = kwargs['PRONAC']
+            year = pronac[:2]
+            seq = pronac[2:]
+            query = (
+                query
+                    .filter(Captacao.Sequencial == seq, Captacao.AnoProjeto == year)
+            )
         return query.group_by(*self.group_by_fields)
 
 

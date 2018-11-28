@@ -1,0 +1,27 @@
+version: '3'
+services:
+  gunicorn:
+    build:
+      context: .
+      dockerfile: ./docker/homolog/Dockerfile
+
+    environment:
+        - SQL_DRIVER=pyodbc
+        - DATABASE_HOST=10.0.0.22
+        - DATABASE_USER=sa
+        - DATABASE_PASSWORD=Lappis_123@
+        - DATABASE_PORT=1433
+
+    volumes:
+      - ./:/app
+
+  nginx:
+    build:
+      context: .
+      dockerfile: ./docker/homolog/Dockerfile_nginx
+
+    ports:
+      - "80:80"
+
+    depends_on:
+      - gunicorn

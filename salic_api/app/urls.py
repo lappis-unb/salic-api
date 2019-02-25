@@ -1,10 +1,10 @@
 import os
 
-from flask import redirect, send_from_directory
+from flask import redirect, send_from_directory, Response
 from flask_cors import CORS
 from flask_restful import Api
 from flask_graphql import GraphQLView
-
+import simplejson
 from ..resources.fornecedor.fornecedor_detail import FornecedorDetail
 from ..resources.fornecedor.fornecedor_list import FornecedorList
 from ..resources.fornecedor.produto import Produto
@@ -22,6 +22,8 @@ from ..resources.proponente.proponente_detail import ProponenteDetail
 from ..resources.proponente.proponente_list import ProponenteList
 from ..resources.test_resource import TestResource
 from ..salic_graphql.schema import schema
+
+from ..resources.query import Query
 
 dirname = os.path.dirname
 BASE_PATH = dirname(dirname(__file__))
@@ -94,3 +96,16 @@ def make_urls(app=None):
     @app.route('/doc/<path:path>')
     def documentation_data(path):
         return send_from_directory(STATIC_URL_PATH, path)
+
+    @app.route('/v1/estatistica/valor_captado', methods=['GET'])
+    def raised_amount():
+        # query = " SELECT interessado.Uf, SUM(CaptacaoReal) FROM SAC.dbo.Projetos as projetos INNER JOIN SAC.dbo.Interessado as interessado              ON interessado.CgcCpf = projetos.CgcCpf       INNER JOIN SAC.dbo.Captacao as capt ON (capt.AnoProjeto = projetos.AnoProjeto AND capt.Sequencial = projetos.Sequencial) GROUP BY interessado.Uf;"
+        # print(query)
+        # print("JSJSJSj")
+        response = Query().fetch("SELECT interessado.Uf, SUM(CaptacaoReal) FROM SAC.dbo.Projetos as projetos INNER JOIN SAC.dbo.Interessado as interessado              ON interessado.CgcCpf = projetos.CgcCpf       INNER JOIN SAC.dbo.Captacao as capt ON (capt.AnoProjeto = projetos.AnoProjeto AND capt.Sequencial = projetos.Sequencial) GROUP BY interessado.Uf;")
+        result = simplejson.dumps(dict(response), use_decimal=True, sort_keys=True)
+        result = Response(result, status=200, mimetype='application/json')
+        result.headers.add('Access-Control-Allow-Origin', '*')
+
+        return result
+

@@ -1,6 +1,7 @@
 import codecs
 import logging
 import time
+import os
 from contextlib import contextmanager
 from hashlib import md5
 from html.parser import HTMLParser
@@ -8,6 +9,11 @@ from html.parser import HTMLParser
 from Crypto import Random
 from Crypto.Cipher import AES
 from flask import current_app as app
+from flask import Response
+
+from .resources.query import Query
+
+import simplejson
 
 SECRET_KEY = ('1234' * 4).encode('ascii')
 TESTING_IV = b'0123456789abcdef'
@@ -130,3 +136,17 @@ class MLStripper(HTMLParser):
         self.fed = []
 
         return data
+
+def get_sql_query(file_path):
+    file = open(file_path, 'r')
+    sql_query = file.read()
+    file.close()
+    return sql_query
+
+
+def get_sql_results(file_path):
+    query_result = Query().fetch(get_sql_query(file_path))
+    json = simplejson.dumps(dict(query_result), use_decimal=True, sort_keys=True)
+    response = Response(json, status=200, mimetype='application/json')
+
+    return response
